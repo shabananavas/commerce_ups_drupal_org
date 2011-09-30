@@ -125,28 +125,9 @@ function commerce_ups_settings_form($form, &$form_state) {
       '#options' => array(
       	'' => t('Please Select'),
       	'US' => t('United States of America'),
-     )
-    );
+    )
+  );
 
-
-
-  
-    
-    // $store['name'] = variable_get('uc_store_name', NULL);
-    // $store['owner'] = variable_get('uc_store_owner', NULL);
-    // $store['email'] = variable_get('uc_store_email', NULL);
-    // $store['email_from'] = variable_get('uc_store_email', NULL);
-    // $store['phone'] = variable_get('uc_store_phone', NULL);
-    // $store['fax'] = variable_get('uc_store_fax', NULL);
-    // $store['street1'] = variable_get('uc_store_street1', NULL);
-    // $store['street2'] = variable_get('uc_store_street2', NULL);
-    // $store['city'] = variable_get('uc_store_city', NULL);
-    // $store['zone'] = variable_get('uc_store_zone', NULL);
-    // $store['postal_code'] = variable_get('uc_store_postal_code', NULL);
-    // $store['country'] = variable_get('uc_store_country', 840);
-    
-    // $form['origin']
-  
   $form['services'] = array(
     '#type' => 'fieldset',
     '#title' => t("Enable UPS Shipping Services"),
@@ -161,6 +142,20 @@ function commerce_ups_settings_form($form, &$form_state) {
       '#options' => $arrOpts,
       '#default_value' => variable_get("commerce_ups_services")
     );   
+    
+    
+  $form['packaging'] = array(
+    '#type' => 'fieldset',
+    '#title' => t("Enable UPS Packaging Types"),
+    '#collapsible' => TRUE
+  );
+
+    $form['packaging']['commerce_ups_packaging'] = array(
+      '#type' => 'checkboxes',
+      '#options' => _commerce_ups_packaging_types(),
+      '#default_value' => variable_get("commerce_ups_packaging")
+    );   
+    
     
   $form['actions']['submit'] = array(
     '#type' => 'submit',
@@ -199,7 +194,8 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
     'commerce_ups_city',
     'commerce_ups_state',
     'commerce_ups_postal_code',
-    'commerce_ups_country_code'
+    'commerce_ups_country_code',
+    'commerce_ups_packaging'
   );
   
   if(empty($form_state['input']['commerce_ups_password']))

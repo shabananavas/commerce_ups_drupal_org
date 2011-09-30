@@ -150,7 +150,7 @@ function _commerce_ups_service_list_details() {
 /**
  * Convenience function to get UPS codes for their package types.
  */
-function _commerce_ups_pkg_types() {
+function _commerce_ups_packaging_types() {
   return array(
     // Customer Supplied Page is first so it will be the default
     '02' => t('Customer Supplied Package'),
