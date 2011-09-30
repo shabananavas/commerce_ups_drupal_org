@@ -156,6 +156,12 @@ function commerce_ups_settings_form($form, &$form_state) {
       '#default_value' => variable_get("commerce_ups_packaging")
     );   
     
+ $form['commerce_ups_pick_up_schedule'] = array(
+  "#type" => "select",
+  "#title" => t("Pick-up Schedule"),
+  "#options" => _commerce_ups_pickup_types(),
+  "#value" => variable_get("commerce_ups_pick_up_schedule")
+ );
     
   $form['actions']['submit'] = array(
     '#type' => 'submit',
@@ -195,7 +201,8 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
     'commerce_ups_state',
     'commerce_ups_postal_code',
     'commerce_ups_country_code',
-    'commerce_ups_packaging'
+    'commerce_ups_packaging',
+    'commerce_ups_pick_up_schedule'
   );
   
   if(empty($form_state['input']['commerce_ups_password']))
