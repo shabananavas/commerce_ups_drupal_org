@@ -67,7 +67,7 @@ function commerce_ups_commerce_shipping_service_info() {
     if($val != 0) { // if you find a selected one...
       $service = $availible_services[$id];
       
-      $shipping_services[str_replace(" ", "_", strtolower($service['title']))] = array(
+      $shipping_services[$service['slug']] = array(
         'title' => t($service['title']),
         'description' => t($service['description']),
         'display_title' => t($service['title']),
@@ -75,9 +75,6 @@ function commerce_ups_commerce_shipping_service_info() {
         'price_component' => 'shipping',
         'callbacks' => array(
           'rate' => '_commerce_ups_service_rate',
-          // 'details_form' => 'commerce_shipping_example_service_details_form',
-          // 'details_form_validate' => 'commerce_shipping_example_service_details_form_validate',
-          // 'details_form_submit' => 'commerce_shipping_example_service_details_form_submit',
         )
       );
     }
@@ -94,26 +91,9 @@ function commerce_ups_commerce_shipping_service_info() {
  * calculated for the given order.
  */
 function _commerce_ups_service_rate($shipping_service, $order) {
-  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
   
-  // Prepare the shipping address for use in the request.
-  if (!empty($order_wrapper->commerce_customer_shipping->commerce_customer_address)) {
-    $shipping_address = $order_wrapper->commerce_customer_shipping->commerce_customer_address->value();
-  }
-  else {
-    $shipping_address = array(
-      'organisation_name' => '',
-      'name_line' => '',
-      'thoroughfare' => '',
-      'premise' => '',
-      'locality' => '',
-      'administrative_area' => '',
-      'postal_code' => '',
-      'country' => '',
-    );
-  }
+  return _commerce_ups_get_shipping_rate($shipping_service, $order);
 
-  // dpm(_commerce_ups_shipping_quote($shipping_service, $packages, $origin, $destination));
 }
 
 
@@ -125,7 +105,7 @@ function _commerce_ups_service_rate($shipping_service, $order) {
  * Convenience function to get UPS codes for their services.
  */
 function _commerce_ups_service_list() {
-  return array(
+  $services =  array(
     // Domestic services
     '03' => array("title" => t('UPS Ground'), "description" => "Ground Delivery"),
     '01' => array("title" => t('UPS Next Day Air'), "description" => "Next Day Air"),
@@ -141,11 +121,16 @@ function _commerce_ups_service_list() {
     '54' => array("title" => 'UPS Worldwide Express Plus', "description" => "Worldwide Express Plus"),
     '65' => array("title" => 'UPS Worldwide Saver', "description" => "Worldwide Saver")
   );
+  
+  /* Make a unique ID to identify the service by */
+  foreach($services as $key => $service) {
+    $service['slug'] = str_replace(" ", "_", strtolower($service['title']));
+    $services[$key] = $service;
+  }
+  
+  return $services;
 }
 
-function _commerce_ups_service_list_details() {
-  
-}
 
 /**
  * Convenience function to get UPS codes for their package types.
@@ -167,6 +152,17 @@ function _commerce_ups_packaging_types() {
   );
 }
 
+
+function _commerce_ups_pickup_types() {
+  return array(
+    "06" => "One Time Pickup",
+    "01" => "Daily Pickup",
+    "03" => "Customer Counter",
+    "07" => "On Call Air",
+    "19" => "Letter Center",
+    "20" => "Air Service Center"
+  );
+}
 
 
 
