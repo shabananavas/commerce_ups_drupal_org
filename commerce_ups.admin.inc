@@ -140,7 +140,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     $form['services']['commerce_ups_services'] = array(
       '#type' => 'checkboxes',
       '#options' => $arrOpts,
-      '#default_value' => variable_get("commerce_ups_services")
+      '#default_value' => variable_get("commerce_ups_services", array())
     );   
     
     
@@ -153,7 +153,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     $form['packaging']['commerce_ups_packaging'] = array(
       '#type' => 'checkboxes',
       '#options' => _commerce_ups_packaging_types(),
-      '#default_value' => variable_get("commerce_ups_packaging")
+      '#default_value' => variable_get("commerce_ups_packaging", array())
     );   
     
  $form['commerce_ups_pick_up_schedule'] = array(
