@@ -1,0 +1,172 @@
+<?php
+require 'commerce_ups.xml.inc';
+
+function commerce_ups_menu() {
+  $shipping_methods = array();
+
+  $shipping_methods['admin/commerce/config/shipping/methods/ups/edit'] = array(
+    'title' => 'Edit',
+    'description' => 'Configure the UPS shipping method.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commerce_ups_settings_form'),
+    'access arguments' => array('administer shipping'),
+    'file' => 'commerce_ups.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
+    'weight' => 0,
+  );
+
+  return $shipping_methods;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* COMMERCE SHIPPING API
+======================== */
+
+
+/**
+ * Implements hook_commerce_shipping_method_info().
+ */
+function commerce_ups_commerce_shipping_method_info() {
+  $shipping_methods = array();
+
+  $shipping_methods['ups'] = array(
+    'title' => t('UPS'),
+    'description' => t('Quote rates from UPS'),
+  );
+
+  return $shipping_methods;
+}
+
+
+/**
+ * Implements hook_commerce_shipping_service_info().
+ */
+function commerce_ups_commerce_shipping_service_info() {
+  $shipping_services = array();
+  
+  $availible_services = _commerce_ups_service_list();
+  $selected_services = variable_get('commerce_ups_services', array());
+  
+  foreach($selected_services as $id => $val) {
+    if($val != 0) { // if you find a selected one...
+      $service = $availible_services[$id];
+      
+      $shipping_services[str_replace(" ", "_", strtolower($service['title']))] = array(
+        'title' => t($service['title']),
+        'description' => t($service['description']),
+        'display_title' => t($service['title']),
+        'shipping_method' => 'ups',
+        'price_component' => 'shipping',
+        'callbacks' => array(
+          'rate' => '_commerce_ups_service_rate',
+          // 'details_form' => 'commerce_shipping_example_service_details_form',
+          // 'details_form_validate' => 'commerce_shipping_example_service_details_form_validate',
+          // 'details_form_submit' => 'commerce_shipping_example_service_details_form_submit',
+        )
+      );
+    }
+  }
+
+  return $shipping_services;
+}
+
+
+
+
+/**
+ * Shipping service callback: returns a base price array for a shipping service
+ * calculated for the given order.
+ */
+function _commerce_ups_service_rate($shipping_service, $order) {
+  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+  
+  // Prepare the shipping address for use in the request.
+  if (!empty($order_wrapper->commerce_customer_shipping->commerce_customer_address)) {
+    $shipping_address = $order_wrapper->commerce_customer_shipping->commerce_customer_address->value();
+  }
+  else {
+    $shipping_address = array(
+      'organisation_name' => '',
+      'name_line' => '',
+      'thoroughfare' => '',
+      'premise' => '',
+      'locality' => '',
+      'administrative_area' => '',
+      'postal_code' => '',
+      'country' => '',
+    );
+  }
+
+  // dpm(_commerce_ups_shipping_quote($shipping_service, $packages, $origin, $destination));
+}
+
+
+
+
+
+
+/**
+ * Convenience function to get UPS codes for their services.
+ */
+function _commerce_ups_service_list() {
+  return array(
+    // Domestic services
+    '03' => array("title" => t('UPS Ground'), "description" => "Ground Delivery"),
+    '01' => array("title" => t('UPS Next Day Air'), "description" => "Next Day Air"),
+    '13' => array("title" => "UPS Next Day Air Saver", "description" => "Next Day Air Saver"),
+    '14' => array("title" => 'UPS Next Day Early A.M.', "description" => "Next Day Early A.M."),
+    '02' => array("title" => 'UPS 2nd Day Air', "description" => "2nd Day Air"),
+    '59' => array("title" => 'UPS 2nd Day Air A.M.', "description" => "2nd Day Air A.M."),
+    '12' => array("title" => 'UPS 3 Day Select', "description" => "3 Day Select"),
+    // International services
+    '11' => array("title" => 'UPS Standard', "description" => "International Standard"),
+    '07' => array("title" => 'UPS Worldwide Express', "description" => "Worldwide Express"),
+    '08' => array("title" => 'UPS Worldwide Expedited', "description" => "Worldwide Expedited"),
+    '54' => array("title" => 'UPS Worldwide Express Plus', "description" => "Worldwide Express Plus"),
+    '65' => array("title" => 'UPS Worldwide Saver', "description" => "Worldwide Saver")
+  );
+}
+
+function _commerce_ups_service_list_details() {
+  
+}
+
+/**
+ * Convenience function to get UPS codes for their package types.
+ */
+function _commerce_ups_pkg_types() {
+  return array(
+    // Customer Supplied Page is first so it will be the default
+    '02' => t('Customer Supplied Package'),
+    '01' => t('UPS Letter'),
+    '03' => t('Tube'),
+    '04' => t('PAK'),
+    '21' => t('UPS Express Box'),
+    '24' => t('UPS 25KG Box'),
+    '25' => t('UPS 10KG Box'),
+    '30' => t('Pallet'),
+    '2a' => t('Small Express Box'),
+    '2b' => t('Medium Express Box'),
+    '2c' => t('Large Express Box'),
+  );
+}
+
+
+
+
