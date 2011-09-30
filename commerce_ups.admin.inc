@@ -29,9 +29,9 @@ function commerce_ups_settings_form($form, &$form_state) {
     );
 
   $form['origin'] = array(
-    '#type' = "fieldset",
-    '#title' = t("Origin Address"),
-    '#collapsible' = true
+    '#type' => "fieldset",
+    '#title' => t("Origin Address"),
+    '#collapsible' => true
   );
     
     // $store['name'] = variable_get('uc_store_name', NULL);

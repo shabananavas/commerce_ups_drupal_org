@@ -1,4 +1,4 @@
-name = Drupal Commerce UPS
+name = Commerce UPS
 description = Integrates UPS with Commerce Shipping.
 package = Commerce (shipping)
 dependencies[] = commerce
