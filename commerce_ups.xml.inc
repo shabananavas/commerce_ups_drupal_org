@@ -109,7 +109,7 @@ function _commerce_ups_get_shipping_rate($shipping_service, $order) {
   
   
   $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><RatingServiceSelectionRequest></RatingServiceSelectionRequest>");
-  array_to_xml($aXml, $xml);
+  _array_to_xml($aXml, $xml);
   dpm($aXml);
   // dpm($xml->saveXML());
   
@@ -135,9 +135,9 @@ function _array_to_xml($student_info, &$xml_student_info) {
     if(is_array($value)) {
       if(!is_numeric($key)) {
         $subnode = $xml_student_info->addChild("$key");
-        array_to_xml($value, $subnode);
+        _array_to_xml($value, $subnode);
       } else {
-        array_to_xml($value, $xml_student_info);
+        _array_to_xml($value, $xml_student_info);
       }
     } else {
       $xml_student_info->addChild("$key","$value");
