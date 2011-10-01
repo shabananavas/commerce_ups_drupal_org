@@ -172,3 +172,70 @@ function _commerce_ups_pickup_types() {
     "20" => "Air Service Center"
   );
 }
+
+
+/**
+ * Decrypt a specified value.
+ */
+function commerce_ups_decrypt($value) {
+  return aes_decrypt($value);
+}
+
+/**
+ * Encrypt a specified value.
+ */
+function commerce_ups_encrypt($value) {
+  return aes_encrypt($value);
+}
+
+/**
+ * Check whether encryption is available.
+ */
+function commerce_ups_encryption_available($options = array()) {
+  $defaults = array(
+    'check_config' => TRUE,
+    'display_errors' => FALSE,
+    'display_warnings' => FALSE,
+    'display_all' => FALSE,
+    'fail_threshold' => 'warnings',
+  );
+  $options = array_merge($defaults, $options);
+  extract($options);
+  $errors = array();
+  $warnings = array();
+
+  if (!module_exists('aes')) {
+    $errors[] = 'AES Encryption module is not installed.';
+  }
+  elseif ($check_config) {
+    if (!variable_get('aes_key_path', FALSE)
+      || variable_get('aes_key_storage_method', FALSE) != 'File') {
+      $warnings[] = 'AES Encryption is installed but not configured securely.
+        Please go <a href="/admin/settings/aes">configure AES Encryption to use
+        file storage</a> to enable encryption for Salesforce credentials.';
+    }
+  }
+
+  if ($display_errors || $display_all) {
+    foreach ($errors as $msg) {
+      drupal_set_message(t($msg), 'error');
+    }
+  }
+
+  if ($display_warnings || $display_all) {
+    foreach ($warnings as $msg) {
+      drupal_set_message(t($msg), 'warning');
+    }
+  }
+
+  switch ($fail_threshold) {
+    case 'errors':
+      if (empty($errors)) {
+        return TRUE;
+      }
+  case 'warnings':
+    if (empty($errors) && empty($warnings)) {
+      return TRUE;
+    }
+  }
+}
