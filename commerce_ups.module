@@ -75,12 +75,12 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
     $rates = array();
 
     // Build the rate request for the current order. This returns XML.
-    $rate_request_element = commerce_ups_build_rate_request($order);
+    $rate_request_xml = commerce_ups_build_rate_request($shipping_service, $order);
 
     // If we got a valid rate request object back...
-    if ($rate_request_element) {
+    if ($rate_request_xml) {
       // Submit the API request to UPS.
-      $response = commerce_ups_api_request($rate_request_element->asXML(), t('Requesting shipping rates for Order @order_number', array('@order_number' => $order->order_number)));
+      $response = commerce_ups_api_request($rate_request_xml, t('Requesting shipping rates for Order @order_number', array('@order_number' => $order->order_number)));
 
       if (!empty($response)) {
         // Parse the response to cache all requested rates for the current order.
