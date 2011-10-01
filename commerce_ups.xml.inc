@@ -21,6 +21,69 @@ function _commerce_ups_xml_access_request() {
  * This builds the XML to submit to UPS for rates.
  */
 function commerce_ups_build_rate_request($shipping_service, $order) {
+
+  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+
+  // Determine the shipping profile reference field name for the order.
+  $field_name = commerce_physical_order_shipping_field_name($order);
+  $shipping_profile = $order_wrapper->{$field_name}->value();
+  
+  // Prepare the shipping address for use in the request.
+  if (!empty($order_wrapper->{$field_name}->commerce_customer_address)) {
+    $shipping_address = $order_wrapper->{$field_name}->commerce_customer_address->value();
+  }
+  else {
+    $shipping_address = addressfield_default_values();
+    $shipping_address['phone'] = '';
+  }
+  
+  // Add the phone number if available.
+  if ($phone_field_name = commerce_physical_customer_profile_phone_number_field_name($shipping_profile)) {
+    if (!empty($order_wrapper->{$field_name}->{$phone_field_name})) {
+      $shipping_address['phone'] = $order_wrapper->{$field_name}->{$phone_field_name}->value();
+    }
+  }
+  
+  /* use as: $shipping_address['organisation_name'] 
+    'country' => $default_country,
+    'name_line' => '',
+    'first_name' => '',
+    'last_name' => '',
+    'organisation_name' => '',
+    'administrative_area' => '',
+    'sub_administrative_area' => '',
+    'locality' => '',
+    'dependent_locality' => '',
+    'postal_code' => '',
+    'thoroughfare' => '',
+    'premise' => '',
+    'sub_premise' => '',
+    'data' => '',
+  */
+
+  $ups_accountid = variable_get('commerce_ups_account_id');
+  $ups_userid = variable_get('commerce_ups_user_id');
+  $ups_password = variable_get('commerce_ups_password');
+  $ups_accesskey = variable_get('commerce_ups_access_key');
+  
+  $aXml['Shipment']['Shipper']['Address'] = array(
+    "CompanyName" => variable_get("commerce_ups_company_name"),
+    "AddressLine1" => variable_get("commerce_ups_address_line_1"),
+    "AddressLine2" => variable_get("commerce_ups_address_line_2"),
+    "City" => variable_get("commerce_ups_city"),
+    "StateProvinceCode" => variable_get("commerce_ups_state"),
+    "PostalCode" => variable_get("commerce_ups_postal_code"),
+    "CountryCode" => variable_get("commerce_ups_country_code"),
+  );
+  
+  $ups_pickupschedule = variable_get('commerce_ups_pick_up_schedule');
+  
+  $weight = commerce_physical_order_weight($order, 'lb');
+  //$volume = commerce_physical_order_volume($order, 'lb');
+  
+  
+  
+
   $aXml = array();
   
   /* Request Type */
