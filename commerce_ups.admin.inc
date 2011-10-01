@@ -11,22 +11,51 @@ function commerce_ups_settings_form($form, &$form_state) {
   $form['api']['commerce_ups_account_id'] = array(
     '#type' => "textfield",
     '#title' => t("Account ID"),
-    '#value' => variable_get('commerce_ups_account_id')
+    '#default_value' => !empty($form_state['values']['commerce_ups_account_id']) ? $form_state['values']['commerce_ups_account_id'] : '',
+    '#required' => !variable_get('commerce_ups_account_id', FALSE),  
   );
   $form['api']['commerce_ups_user_id'] = array(
     '#type' => "textfield",
     '#title' => t("User ID"),
-    '#value' => variable_get('commerce_ups_user_id')
+    '#default_value' => !empty($form_state['values']['commerce_ups_user_id']) ? $form_state['values']['commerce_ups_user_id'] : '',
+    '#required' => !variable_get('commerce_ups_user_id', FALSE),
   );
   $form['api']['commerce_ups_password'] = array(
     '#type' => "password",
     '#title' => t("Password"),
+    '#default_value' => !empty($form_state['values']['commerce_ups_password']) ? $form_state['values']['commerce_ups_password'] : '',
+    '#required' => !variable_get('commerce_ups_password', FALSE),     
   );
   $form['api']['commerce_ups_access_key'] = array(
     '#type' => "textfield",
     '#title' => t("Access Key"),
-    '#value' => variable_get('commerce_ups_access_key')
+    '#default_value' => !empty($form_state['values']['commerce_ups_access_key']) ? $form_state['values']['commerce_ups_access_key'] : '',
+    '#required' => !variable_get('commerce_ups_access_key', FALSE),
   );
+  
+  $form['api']['encryption'] = array(
+    '#type' => 'item',
+    '#title' => 'Encryption',
+    'status' => array(
+      '#type' => 'item',
+      '#title' => FALSE,
+    ),
+  );
+  if (commerce_ups_encryption_available(array('display_all' => TRUE))) {
+    $form['api']['encryption']['status']['#markup'] =
+      'Encryption is available and configured properly.';
+    $form['api']['encryption']['commerce_ups_encrypt'] = array(
+      '#type' => 'checkbox',
+      '#title' => 'Encrypt UPS credentials (HIGHLY RECOMMENDED)',
+      '#description' => 'Note: enabling this setting will not encrypt existing credentials.',
+      '#default_value' => TRUE,
+    );
+  }
+  else {
+    $form['api']['encryption']['status']['#markup'] =
+      '<span class="error"><a href="http://drupal.org/project/aes" target="_blank">AES</a> is not 
+      installed - your login credentials will not be encrypted.</span>';
+  }
 
   $form['origin'] = array(
     '#type' => "fieldset",
@@ -205,27 +234,72 @@ function commerce_ups_settings_form($form, &$form_state) {
 
 /* hook_settings_form_validate() */
 function commerce_ups_settings_form_validate($form, &$form_state) {
+  $values = $form_state['values'];
 
-  $old_password = variable_get('commerce_ups_password', '');
-  if (!$form_state['values']['commerce_ups_password']) {
-    if ($old_password) {
-      form_set_value($form['api']['commerce_ups_password'], $old_password, $form_state);
-    }
-    else {
-      form_set_error('password', t('Password field is required.'));
+  $errors = array();
+  foreach (array('commerce_ups_account_id', 'commerce_ups_user_id', 'commerce_ups_access_key', 'commerce_ups_password') as $value) {
+    if (empty($values[$value])) {
+      $errors[$value] = ucwords(str_replace('commerce_ups_', ' ', $value)) . ' is required';
     }
   }
+
+  if (count($errors) == 4) {
+    // If all 4 fields are empty, the user has not tried to change credentials.
+    // Unset the form values in order to preserve existing credentials.
+    unset($form_state['values']['commerce_ups_account_id'],
+          $form_state['values']['commerce_ups_user_id'],
+          $form_state['values']['commerce_ups_access_key'],
+          $form_state['values']['commerce_ups_password']);
+    return;
+  }
+  elseif (count($errors)) {
+    drupal_set_message(t('Unable to reset UPS credentials.'), 'error');
+    foreach ($errors as $field => $error) {
+      form_set_error($field, check_plain($error));
+    }
+    // If we got errors already no need to continue with validation.
+    return;
+  }
+
+  /* If we are setting or resetting values, test the connection.
+  $ups_connection = ups_api_function_here(); 
+  if (is_good_connection($ups_connection)) {
+    drupal_set_message(t('Connection established. UPS credentials updated.'));
+  }
+  else {
+    drupal_set_message(
+      t('Resetting UPS credentials failed.'), 'error');
+    form_set_error('commerce_ups_account_id', t('Unable to connect to UPS. Please check your credentials.'));
+    form_set_error('commerce_ups_user_id');
+    form_set_error('commerce_ups_access_key');
+    form_set_error('commerce_ups_password');
+  }
+  */
 }
 
 /*
  * Implements hook_form_submit().
  */
 function commerce_ups_settings_form_submit($form, &$form_state) {
+  if ($form_state['input']['commerce_ups_encrypt'] &&
+  !empty($form_state['input']['commerce_ups_user_id'])) {
+    $form_state['input']['commerce_ups_user_id'] = commerce_ups_encrypt($form_state['input']['commerce_ups_user_id']);
+    $form_state['input']['commerce_ups_account_id'] = commerce_ups_encrypt($form_state['input']['commerce_ups_account_id']);
+    $form_state['input']['commerce_ups_access_key'] = commerce_ups_encrypt($form_state['input']['commerce_ups_access_key']);
+    $form_state['input']['commerce_ups_password'] = commerce_ups_encrypt($form_state['input']['commerce_ups_password']);
+  } 
+  else {
+    foreach (array('user_id', 'account_id', 'access_key', 'password') as $value) {
+      unset($form_state['input']['commerce_ups_' . $value]);
+    }
+  }
+  
   $fields = array(
     'commerce_ups_account_id',
     'commerce_ups_user_id',
     'commerce_ups_password',
     'commerce_ups_access_key',
+    'commerce_ups_encrypt',
     'commerce_ups_services',
     'commerce_ups_company_name',
     'commerce_ups_address_line_1',
@@ -240,9 +314,6 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
     'commerce_ups_default_package_size_width',
     'commerce_ups_default_package_size_height',
   );
-  
-  if(empty($form_state['input']['commerce_ups_password']))
-    $form_state['input']['commerce_ups_password'] = $form_state['values']['commerce_ups_password'];
 
   foreach ($fields as $key) {
     $value = $form_state['input'][$key];

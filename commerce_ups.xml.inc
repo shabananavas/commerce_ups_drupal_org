@@ -47,10 +47,11 @@ function commerce_ups_build_rate_request($shipping_service, $order) {
    }
  }
 
- $ups_accountid = variable_get('commerce_ups_account_id', '');
- $ups_userid = variable_get('commerce_ups_user_id', '');
- $ups_password = variable_get('commerce_ups_password', '');
- $ups_accesskey = variable_get('commerce_ups_access_key', '');
+ $encrypted = variable_get('commerce_ups_encrypt', FALSE);
+ $ups_accountid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_account_id', '')) : variable_get('commerce_ups_account_id', '');
+ $ups_userid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_user_id', '')) : variable_get('commerce_ups_user_id', '');
+ $ups_password = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_password', '')) : variable_get('commerce_ups_password', '');
+ $ups_accesskey = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_access_key', '')) : variable_get('commerce_ups_access_key', '');
 
  $access_request = new SimpleXMLElement('<AccessRequest/>');
  $access_request->addChild('AccessLicenseNumber', $ups_accesskey);
