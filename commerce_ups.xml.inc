@@ -17,10 +17,10 @@ function _commerce_ups_xml_access_request() {
 ";
 }
 
-
-
-function _commerce_ups_get_shipping_rate($shipping_service, $order) {
-  
+/*
+ * This builds the XML to submit to UPS for rates.
+ */
+function commerce_ups_build_rate_request($shipping_service, $order) {
   $aXml = array();
   
   /* Request Type */
@@ -28,7 +28,6 @@ function _commerce_ups_get_shipping_rate($shipping_service, $order) {
     "RequestAction" => "Rate",
     "RequestOption" => "Rate"
   );
-  
   
   /* Pickup Schedule */
   $arrSchedules = _commerce_ups_pickup_types();
@@ -38,10 +37,8 @@ function _commerce_ups_get_shipping_rate($shipping_service, $order) {
     "Description" => $arrSchedules[$scheduleCode]
   );
   
-  
   /* Shipment */
   $aXml['Shipment'] = array();
-  
   
   /* This is the company location, not necessarily
   where the order is being shipped from. Since we 
@@ -58,7 +55,6 @@ function _commerce_ups_get_shipping_rate($shipping_service, $order) {
     "PostalCode" => variable_get("commerce_ups_postal_code"),
     "CountryCode" => variable_get("commerce_ups_country_code"),
   );
-  
   
   /* Ship To - Customer Shipping Address */
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
@@ -78,7 +74,6 @@ function _commerce_ups_get_shipping_rate($shipping_service, $order) {
     "PostalCode" => $shipping_address['postal_code'], 
     "CountryCode" => $shipping_address['country']
   );
-  
   
   /* Ship From */
   $aXml['Shipment']['ShipFrom'] = array(
@@ -104,31 +99,75 @@ function _commerce_ups_get_shipping_rate($shipping_service, $order) {
     "Code" => $code 
   );
 
+  // Build and populate the rate request SimpleXML element.
+  $rate_request_element = new SimpleXMLElement('<RatingServiceSelectionRequest/>');
+  commerce_simplexml_add_children($rate_request_element, $aXml);
   
-  
-  
-  
-  $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><RatingServiceSelectionRequest></RatingServiceSelectionRequest>");
-  _array_to_xml($aXml, $xml);
   dpm($aXml);
   // dpm($xml->saveXML());
   
-  
-  
-  
-  /* Replace with Payload */
-  return array(
-    'amount' => 2000,
-    'currency_code' => 'USD',
-    'data' => array(),
-  );
+  return $rate_request_element;
 
 }
 
+/**
+ * Submits an API request to the Progistics XML Processor.
+ *
+ * @param $xml
+ *   An XML string to submit to the Progistics XML Processor.
+ * @param $message
+ *   Optional log message to use for logged API requests.
+ */
+function commerce_ups_api_request($xml, $message = '') {
+  // Log the API request if specified.
+  if (in_array('request', variable_get('commerce_ups_log', array()))) {
+    if (empty($message)) {
+      $message = t('Submitting API request to the UPS');
+    }
 
+    watchdog('ups', '@message:<pre>@xml</pre>', array('@message' => $message, '@xml' => $xml));
+  }
 
+  // Build the array of header information for the request.
+  /*
+  $header = array();
+  $header[] = 'Content-type: text/xml; charset=utf-8';
+  $header[] = 'Content-length: ' . strlen($xml);
 
+  // POST the XML to the XML Processor.
+  $ch = curl_init(commerce_connectship_xml_processor_url());
+  curl_setopt($ch, CURLOPT_VERBOSE, 0);
+  curl_setopt($ch, CURLOPT_POST, 1);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($ch, CURLOPT_NOPROGRESS, 1);
+  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+  $result = curl_exec($ch);
+  */
 
+  // Log any errors to the watchdog.
+  if ($error = curl_error($ch)) {
+    watchdog('ups', 'cURL error: @error', array('@error' => $error), WATCHDOG_ERROR);
+    return FALSE;
+  }
+  curl_close($ch);
+
+  // If we received data back from the server...
+  if (!empty($result)) {
+    // Extract the result into an XML response object.
+    $response = new SimpleXMLElement($result);
+
+    // Log the API request if specified.
+    if (in_array('response', variable_get('commerce_ups_log', array()))) {
+      watchdog('ups', 'API response received:<pre>@xml</pre>', array('@xml' => $response->asXML()));
+    }
+
+    return $response;
+  }
+  else {
+    return FALSE;
+  }
+}
 
 function _array_to_xml($student_info, &$xml_student_info) {
   foreach($student_info as $key => $value) {
