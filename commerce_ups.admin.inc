@@ -7,29 +7,33 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#title' => t('UPS API credentials'),
     '#collapsible' => TRUE,
   );
-    
+  
+  $encrypted = variable_get('commerce_ups_encrypt', FALSE);
+  $ups_accountid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_account_id', '')) : variable_get('commerce_ups_account_id', '');
+  $ups_userid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_user_id', '')) : variable_get('commerce_ups_user_id', '');
+  $ups_accesskey = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_access_key', '')) : variable_get('commerce_ups_access_key', '');
+  
   $form['api']['commerce_ups_account_id'] = array(
     '#type' => "textfield",
     '#title' => t("Account ID"),
-    '#default_value' => !empty($form_state['values']['commerce_ups_account_id']) ? $form_state['values']['commerce_ups_account_id'] : '',
-    '#required' => !variable_get('commerce_ups_account_id', FALSE),  
+    '#default_value' => $ups_accountid,
+    '#required' => !variable_get('commerce_ups_account_id', FALSE),
   );
   $form['api']['commerce_ups_user_id'] = array(
     '#type' => "textfield",
     '#title' => t("User ID"),
-    '#default_value' => !empty($form_state['values']['commerce_ups_user_id']) ? $form_state['values']['commerce_ups_user_id'] : '',
+    '#default_value' => $ups_userid,
     '#required' => !variable_get('commerce_ups_user_id', FALSE),
   );
   $form['api']['commerce_ups_password'] = array(
     '#type' => "password",
     '#title' => t("Password"),
-    '#default_value' => !empty($form_state['values']['commerce_ups_password']) ? $form_state['values']['commerce_ups_password'] : '',
     '#required' => !variable_get('commerce_ups_password', FALSE),     
   );
   $form['api']['commerce_ups_access_key'] = array(
     '#type' => "textfield",
     '#title' => t("Access Key"),
-    '#default_value' => !empty($form_state['values']['commerce_ups_access_key']) ? $form_state['values']['commerce_ups_access_key'] : '',
+    '#default_value' => $ups_accesskey,
     '#required' => !variable_get('commerce_ups_access_key', FALSE),
   );
   
@@ -198,6 +202,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#type' => 'fieldset',
     '#title' => t("Default package size (inches)"),
     '#collapsible' => FALSE,
+    '#description' => 'UPS requires a package size when determining estimates.', 
   );
 
   $form['default_package_size']['commerce_ups_default_package_size_length'] = array(
@@ -222,6 +227,19 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#size' => 5,
     '#required' => TRUE,
     '#value' => variable_get('commerce_ups_default_package_size_height'),
+  );
+  
+  $form['default_package_size']['details'] = array(
+    '#markup' => 'The package size is used to determine the number of packages necessary to 
+      create a UPS shipping cost estimate. <strong>If products do not have physical dimensions and 
+      weights associated with them, the estimates will not be accurate.</strong> The logic implemented works as:
+      <ul>
+      <li>Assume each order requires at least one package.</li>
+      <li>Use the combined volume of all products in an order to determine the number of packages.</li>
+      </ul>
+      This is a simple calculation that can get close to actual shipping costs. More
+      complex logic involving multiple package sizes, weights, and void space can be implemented via 
+      custom modules.',
   );
     
   $form['actions']['submit'] = array(
@@ -281,8 +299,7 @@ function commerce_ups_settings_form_validate($form, &$form_state) {
  * Implements hook_form_submit().
  */
 function commerce_ups_settings_form_submit($form, &$form_state) {
-  if ($form_state['input']['commerce_ups_encrypt'] &&
-  !empty($form_state['input']['commerce_ups_user_id'])) {
+  if ($form_state['input']['commerce_ups_encrypt'] && !empty($form_state['input']['commerce_ups_user_id'])) {
     $form_state['input']['commerce_ups_user_id'] = commerce_ups_encrypt($form_state['input']['commerce_ups_user_id']);
     $form_state['input']['commerce_ups_account_id'] = commerce_ups_encrypt($form_state['input']['commerce_ups_account_id']);
     $form_state['input']['commerce_ups_access_key'] = commerce_ups_encrypt($form_state['input']['commerce_ups_access_key']);

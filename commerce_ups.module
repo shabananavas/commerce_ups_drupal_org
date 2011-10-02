@@ -41,11 +41,10 @@ function commerce_ups_commerce_shipping_service_info() {
   
   $availible_services = _commerce_ups_service_list();
   $selected_services = variable_get('commerce_ups_services', array());
-  
+
   foreach($selected_services as $id => $val) {
     if($val != 0) { // if you find a selected one...
       $service = $availible_services[$id];
-      
       $shipping_services[$service['slug']] = array(
         'title' => t($service['title']),
         'description' => t($service['description']),

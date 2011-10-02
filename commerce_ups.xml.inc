@@ -38,12 +38,22 @@ function commerce_ups_build_rate_request($shipping_service, $order) {
    $shipping_address = $order_wrapper->commerce_customer_shipping->commerce_customer_address->value();
  }
  
- /* Look up Service code by provided slug */
+ // Look up Service code by provided slug
+ // TODO: this bit only returns only one selected service. This is wrong and needs to be fixed.
  $code = null;
  $arrServices = _commerce_ups_service_list();
  foreach($arrServices as $key => $service) {
    if ($service['slug'] == $shipping_service['name']) {
-     $code = $key;
+     $selected_service = $key;
+   }
+ }
+ 
+ // Look up the selected packaging types
+ // TODO: this bit only returns only one packaging type. This is wrong and needs to be fixed.
+ $packaging_types = variable_get('commerce_ups_packaging', '');
+ foreach($packaging_types as $packaging_type) {
+   if (!empty($packaging_type)) {
+     $selected_packaging_type = $packaging_type;
    }
  }
 
@@ -95,13 +105,11 @@ function commerce_ups_build_rate_request($shipping_service, $order) {
          'ResidentialAddressIndicator' => '',
        ),
        'Service' => array(
-         //'Code' => $code,
-         'Code' => '01',
+         'Code' => $selected_service,
        ),
        'Package' => array(
          'PackagingType' => array(
-           //'Code' => $service,
-           'Code' => '01',
+           'Code' => $selected_packaging_type,
          ),
          'Dimensions' => array(
            'UnitOfMeasurement' => array(
