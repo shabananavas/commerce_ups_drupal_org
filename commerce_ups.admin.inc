@@ -181,21 +181,26 @@ function commerce_ups_settings_form($form, &$form_state) {
   $form['packaging'] = array(
     '#type' => 'fieldset',
     '#title' => t("Enable UPS Packaging Types"),
-    '#collapsible' => TRUE
+    '#collapsible' => FALSE
   );
-
+  
+  $form['packaging']['commerce_ups_packaging_explanation'] = array(
+    '#type' => 'markup',
+    '#markup' => 'Only "Customer supplied packaging" is currently available. Please enter the default package size below.',
+  );
+  
+  $form['packaging']['commerce_ups_packaging'] = array(
+    '#type' => 'hidden',
+    '#value' => '02',
+  );
+  
+  /*
   $form['packaging']['commerce_ups_packaging'] = array(
     '#type' => 'checkboxes',
     '#options' => _commerce_ups_packaging_types(),
     '#default_value' => variable_get("commerce_ups_packaging", array())
-  );   
-    
-  $form['commerce_ups_pick_up_schedule'] = array(
-    "#type" => "select",
-    "#title" => t("Pick-up Schedule"),
-    "#options" => _commerce_ups_pickup_types(),
-    "#value" => variable_get("commerce_ups_pick_up_schedule")
   );
+  */
  
   // Fields for default package size (inches)  
   $form['default_package_size'] = array(
@@ -240,6 +245,13 @@ function commerce_ups_settings_form($form, &$form_state) {
       This is a simple calculation that can get close to actual shipping costs. More
       complex logic involving multiple package sizes, weights, and void space can be implemented via 
       custom modules.',
+  );
+    
+  $form['commerce_ups_pick_up_schedule'] = array(
+    "#type" => "select",
+    "#title" => t("Pick-up Schedule"),
+    "#options" => _commerce_ups_pickup_types(),
+    "#value" => variable_get("commerce_ups_pick_up_schedule")
   );
     
   $form['actions']['submit'] = array(
