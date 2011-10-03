@@ -47,15 +47,6 @@ function commerce_ups_build_rate_request($shipping_service, $order) {
      $selected_service = $key;
    }
  }
- 
- // Look up the selected packaging types
- // TODO: this bit only returns only one packaging type. This is wrong and needs to be fixed.
- $packaging_types = variable_get('commerce_ups_packaging', '');
- foreach($packaging_types as $packaging_type) {
-   if (!empty($packaging_type)) {
-     $selected_packaging_type = $packaging_type;
-   }
- }
 
  $encrypted = variable_get('commerce_ups_encrypt', FALSE);
  $ups_accountid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_account_id', '')) : variable_get('commerce_ups_account_id', '');
@@ -109,7 +100,7 @@ function commerce_ups_build_rate_request($shipping_service, $order) {
        ),
        'Package' => array(
          'PackagingType' => array(
-           'Code' => $selected_packaging_type,
+           'Code' => variable_get('commerce_ups_packaging', '02'),
          ),
          'Dimensions' => array(
            'UnitOfMeasurement' => array(
