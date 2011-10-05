@@ -156,6 +156,8 @@ function commerce_ups_api_request($xml, $message = '') {
  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);  
  curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);  
  curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);  
+ curl_setopt($ch, CURLOPT_HEADER, false);
+ 
  $result = curl_exec ($ch);
 
  // Log any errors to the watchdog.
