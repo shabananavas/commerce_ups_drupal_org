@@ -3,7 +3,7 @@
 /*
 * This builds the XML to submit to UPS for rates.
 */
-function commerce_ups_build_rate_request($shipping_service, $order) {
+function commerce_ups_build_rate_request($order) {
  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
 
  // Determine the shipping profile reference field name for the order.
@@ -42,11 +42,6 @@ function commerce_ups_build_rate_request($shipping_service, $order) {
  // TODO: this bit only returns only one selected service. This is wrong and needs to be fixed.
  $code = null;
  $arrServices = _commerce_ups_service_list();
- foreach($arrServices as $key => $service) {
-   if ($service['slug'] == $shipping_service['name']) {
-     $selected_service = $key;
-   }
- }
 
  $encrypted = variable_get('commerce_ups_encrypt', FALSE);
  $ups_accountid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_account_id', '')) : variable_get('commerce_ups_account_id', '');
@@ -68,7 +63,7 @@ function commerce_ups_build_rate_request($shipping_service, $order) {
           'XpciVersion' => '1.0001',
        ),
        'RequestAction' => 'Rate',
-       'RequestOption' => 'Rate',
+       'RequestOption' => 'Shop',
      ),
      'pickupType' => array(
        'code' => $scheduleCode,
@@ -95,9 +90,6 @@ function commerce_ups_build_rate_request($shipping_service, $order) {
          ),
          'ResidentialAddressIndicator' => '',
        ),
-       'Service' => array(
-         'Code' => $selected_service,
-       ),
        'Package' => array(
          'PackagingType' => array(
            'Code' => variable_get('commerce_ups_packaging', '02'),
@@ -121,12 +113,12 @@ function commerce_ups_build_rate_request($shipping_service, $order) {
    );
    $rating_request = new SimpleXMLElement('<RatingServiceSelectionRequest/>');
    _array_to_xml($transaction_request, $rating_request);
-   $rating_requests .= $rating_request->asXML();
+   
+   $rating_request .= $rating_request->asXML();
  }
  
- $aXML = $access_request->asXML() . $rating_requests;
- 
- return $aXML;
+ $xml = $access_request->asXML() . $rating_request;
+ return $xml;
 }
 
 /**
@@ -146,17 +138,15 @@ function commerce_ups_api_request($xml, $message = '') {
    watchdog('ups', '@message:<pre>@xml</pre>', array('@message' => $message, '@xml' => $xml));
  }
  
- dsm($xml);
 
  $ch = curl_init('https://www.ups.com/ups.app/xml/Rate');  
- curl_setopt($ch, CURLOPT_HEADER, 1);  
+ curl_setopt($ch, CURLOPT_HEADER, 0);  
  curl_setopt($ch, CURLOPT_POST, 1);  
  curl_setopt($ch, CURLOPT_TIMEOUT, 60);  
  curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);  
  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);  
  curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);  
  curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);  
- curl_setopt($ch, CURLOPT_HEADER, false);
  
  $result = curl_exec ($ch);
 
@@ -169,10 +159,10 @@ function commerce_ups_api_request($xml, $message = '') {
 
  // If we received data back from the server...
  if (!empty($result)) {
- dsm($result);
+
    // Extract the result into an XML response object.
    $response = new SimpleXMLElement($result);
-
+   
    // Log the API request if specified.
    if (in_array('response', variable_get('commerce_ups_log', array()))) {
      watchdog('ups', 'API response received:<pre>@xml</pre>', array('@xml' => $response->asXML()));
@@ -198,4 +188,10 @@ function _array_to_xml($student_info, &$xml_student_info) {
      $xml_student_info->addChild("$key","$value");
    }
  }
+}
+
+function _xml_to_array($xml) {
+  $strXML = simplexml_load_string($xml);
+  $json = json_encode($strXML);
+  return json_decode($json,TRUE);
 }

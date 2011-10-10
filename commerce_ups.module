@@ -74,7 +74,7 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
     $rates = array();
 
     // Build the rate request for the current order. This returns XML.
-    $rate_request_xml = commerce_ups_build_rate_request($shipping_service, $order);
+    $rate_request_xml = commerce_ups_build_rate_request($order);
 
     // If we got a valid rate request object back...
     if ($rate_request_xml) {
@@ -82,30 +82,25 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
       $response = commerce_ups_api_request($rate_request_xml, t('Requesting shipping rates for Order @order_number', array('@order_number' => $order->order_number)));
 
       if (!empty($response)) {
+        
         // Parse the response to cache all requested rates for the current order.
-        /*
-        foreach ($response->RATEDSHIPMENT as $rate) {
-          // If there was no error for this shipment...
-          if ($rate->ERROR->ERRORCODE == '0') {
-            // Extract the service name and price information from the rate object.
-            $service_name = commerce_connectship_commerce_shipping_service_name((string) $rate->SHIPMENTSERVICE->SCS);
-            $decimal = (string) $rate->TOTALCHARGES->MONETARYVALUE;
-            $currency_code = (string) $rate->TOTALCHARGES->CURRENCYCODE;
+        foreach ($response->RatedShipment as $rate) {
+          // Extract the service name and price information from the rate object.
+          $service_name = commerce_ups_commerce_shipping_service_name((string) $rate->Service->Code);
+          $decimal = (string) $rate->TotalCharges->MonetaryValue;
+          $currency_code = (string) $rate->TotalCharges->CurrencyCode;
 
-            // Add an item to the rates array for the current service.
-            $rates[$service_name] = array(
-              'amount' => commerce_currency_decimal_to_amount($decimal, $currency_code),
-              'currency_code' => $currency_code,
-              'data' => array(),
-            );
-          }
+          // Add an item to the rates array for the current service.
+          $rates[$service_name] = array(
+            'amount' => commerce_currency_decimal_to_amount($decimal, $currency_code),
+            'currency_code' => $currency_code,
+            'data' => array(),
+          );
         }
-        */
+        // Cache the calculated rates for subsequent requests.
+        commerce_shipping_rates_cache_set('ups', $order, $rates);        
       }
     }
-
-    // Cache the calculated rates for subsequent requests.
-    commerce_shipping_rates_cache_set('ups', $order, $rates);
   }
 
   // Return the rate for the requested service or FALSE if not found.
@@ -170,6 +165,12 @@ function _commerce_ups_pickup_types() {
     "19" => "Letter Center",
     "20" => "Air Service Center"
   );
+}
+
+
+function commerce_ups_commerce_shipping_service_name($service_code) {
+  $service_names = _commerce_ups_service_list();
+  return $service_names[$service_code]['slug'];
 }
 
 /**
