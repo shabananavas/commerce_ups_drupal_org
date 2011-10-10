@@ -1,4 +1,10 @@
 <?php
+
+/**
+ * @file
+ * Handles main functionality for Commerce UPS module.
+ */
+
 require 'commerce_ups.xml.inc';
 
 function commerce_ups_menu() {
@@ -38,12 +44,12 @@ function commerce_ups_commerce_shipping_method_info() {
  */
 function commerce_ups_commerce_shipping_service_info() {
   $shipping_services = array();
-  
+
   $availible_services = _commerce_ups_service_list();
   $selected_services = variable_get('commerce_ups_services', array());
 
-  foreach($selected_services as $id => $val) {
-    if($val != 0) { // if you find a selected one...
+  foreach ($selected_services as $id => $val) {
+    if ($val != 0) { // if you find a selected one...
       $service = $availible_services[$id];
       $shipping_services[$service['slug']] = array(
         'title' => t($service['title']),
@@ -66,10 +72,9 @@ function commerce_ups_commerce_shipping_service_info() {
  */
 function commerce_ups_service_rate_order($shipping_service, $order) {
   // First attempt to recover cached shipping rates for the current order.
-  $rates = commerce_shipping_rates_cache_get('ups', $order, variable_get('commerce_ups_rates_timeout', 60));
+  $rates = commerce_shipping_rates_cache_get('ups', $order, variable_get('commerce_ups_rates_timeout', 6));
 
-  // If no rates were recovered from the cache or the cached rates are over five
-  // minutes old...
+  // If no rates were recovered from the cache or the cached rates are over one minute old...
   if (!$rates) {
     $rates = array();
 
@@ -82,7 +87,6 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
       $response = commerce_ups_api_request($rate_request_xml, t('Requesting shipping rates for Order @order_number', array('@order_number' => $order->order_number)));
 
       if (!empty($response)) {
-        
         // Parse the response to cache all requested rates for the current order.
         foreach ($response->RatedShipment as $rate) {
           // Extract the service name and price information from the rate object.
@@ -98,7 +102,7 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
           );
         }
         // Cache the calculated rates for subsequent requests.
-        commerce_shipping_rates_cache_set('ups', $order, $rates);        
+        commerce_shipping_rates_cache_set('ups', $order, $rates);
       }
     }
   }
@@ -127,9 +131,9 @@ function _commerce_ups_service_list() {
     '54' => array("title" => 'UPS Worldwide Express Plus', "description" => "Worldwide Express Plus"),
     '65' => array("title" => 'UPS Worldwide Saver', "description" => "Worldwide Saver")
   );
-  
+
   /* Make a unique ID to identify the service by */
-  foreach($services as $key => $service) {
+  foreach ($services as $key => $service) {
     $service['slug'] = str_replace(" ", "_", strtolower($service['title']));
     $services[$key] = $service;
   }
