@@ -1,197 +1,216 @@
 <?php
 
+// $Id$
+
+/**
+ * @file
+ * Handles XML-related stuff for Commerce UPS module.
+ */
+
 /*
-* This builds the XML to submit to UPS for rates.
-*/
+ * This builds the XML to submit to UPS for rates.
+ */
 function commerce_ups_build_rate_request($order) {
- $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
 
- // Determine the shipping profile reference field name for the order.
- $field_name = commerce_physical_order_shipping_field_name($order);
- $shipping_profile = $order_wrapper->{$field_name}->value();
- 
- // Prepare the shipping address for use in the request.
- if (!empty($order_wrapper->{$field_name}->commerce_customer_address)) {
-   $shipping_address = $order_wrapper->{$field_name}->commerce_customer_address->value();
- }
- else {
-   $shipping_address = addressfield_default_values();
- }
- 
- $ups_pickupschedule = variable_get('commerce_ups_pick_up_schedule');
- 
- $weight = commerce_physical_order_weight($order, 'lb');  // this returns $weight['unit'] and $weight['weight']
- $volume = commerce_physical_order_volume($order, 'in');  // this returns $volume['unit'] and $weight['volume']
+  // Determine the shipping profile reference field name for the order.
+  $field_name = commerce_physical_order_shipping_field_name($order);
+  $shipping_profile = $order_wrapper->{$field_name}->value();
 
- $default_package_volume = variable_get('commerce_ups_default_package_size_length', '0') *variable_get('commerce_ups_default_package_size_width', '0') * variable_get('commerce_ups_default_package_size_height', '0');
+  // Prepare the shipping address for use in the request.
+  if (!empty($order_wrapper->{$field_name}->commerce_customer_address)) {
+    $shipping_address = $order_wrapper->{$field_name}->commerce_customer_address->value();
+  }
+  else {
+    $shipping_address = addressfield_default_values();
+  }
 
- $number_of_packages = ceil($volume['volume'] / $default_package_volume);
+  $ups_pickupschedule = variable_get('commerce_ups_pick_up_schedule');
 
- /* Pickup Schedule */
- $arrSchedules = _commerce_ups_pickup_types();
- $scheduleCode = variable_get('commerce_ups_pick_up_schedule');
- 
- /* Ship To - Customer Shipping Address */
- $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
- // Prepare the shipping address for use in the request.
- if (!empty($order_wrapper->commerce_customer_shipping->commerce_customer_address)) {
-   $shipping_address = $order_wrapper->commerce_customer_shipping->commerce_customer_address->value();
- }
- 
- // Look up Service code by provided slug
- // TODO: this bit only returns only one selected service. This is wrong and needs to be fixed.
- $code = null;
- $arrServices = _commerce_ups_service_list();
+  $weight = commerce_physical_order_weight($order, 'lb');  // this returns $weight['unit'] and $weight['weight']
+  $volume = commerce_physical_order_volume($order, 'in');  // this returns $volume['unit'] and $weight['volume']
 
- $encrypted = variable_get('commerce_ups_encrypt', FALSE);
- $ups_accountid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_account_id', '')) : variable_get('commerce_ups_account_id', '');
- $ups_userid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_user_id', '')) : variable_get('commerce_ups_user_id', '');
- $ups_password = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_password', '')) : variable_get('commerce_ups_password', '');
- $ups_accesskey = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_access_key', '')) : variable_get('commerce_ups_access_key', '');
+  $default_package_volume = variable_get('commerce_ups_default_package_size_length', '0') *variable_get('commerce_ups_default_package_size_width', '0') * variable_get('commerce_ups_default_package_size_height', '0');
 
- $access_request = new SimpleXMLElement('<AccessRequest/>');
- $access_request->addChild('AccessLicenseNumber', $ups_accesskey);
- $access_request->addChild('UserId', $ups_userid);
- $access_request->addChild('Password', $ups_password);
+  $number_of_packages = ceil($volume['volume'] / $default_package_volume);
 
- $rating_requests = '';
- for($package_number = 1; $package_number <= $number_of_packages; $package_number++) {
-   $transaction_request = array(
-     'Request' => array(
-       'TransactionReference' => array(
-          'CustomerContext' => 'Bare Bones Rate Request',
-          'XpciVersion' => '1.0001',
-       ),
-       'RequestAction' => 'Rate',
-       'RequestOption' => 'Shop',
-     ),
-     'pickupType' => array(
-       'code' => $scheduleCode,
-     ),
-     'Shipment' => array(
-       'Shipper' => array(
-         'Address' => array(
-           'PostalCode' => variable_get('commerce_ups_postal_code', ''),
-           'CountryCode' => variable_get('commerce_ups_country_code', ''),
-         ),
-         'ShipperNumber' => $ups_accountid,
-       ),
-       'ShipTo' => array(
-         'Address' => array(
-           'PostalCode' => $shipping_address['postal_code'],
-           'CountryCode' => $shipping_address['country'],
-         ),
-         'ResidentialAddressIndicator' => '',
-       ),
-       'ShipFrom' => array(
-         'Address' => array(
-           'PostalCode' => variable_get('commerce_ups_postal_code', ''),
-           'CountryCode' => variable_get('commerce_ups_country_code', ''),
-         ),
-         'ResidentialAddressIndicator' => '',
-       ),
-       'Package' => array(
-         'PackagingType' => array(
-           'Code' => variable_get('commerce_ups_packaging', '02'),
-         ),
-         'Dimensions' => array(
-           'UnitOfMeasurement' => array(
-             'Code' => 'IN', 
-           ),
-           'Length' => variable_get('commerce_ups_default_package_size_length', '0'),
-           'Width' => variable_get('commerce_ups_default_package_size_width', '0'),
-           'Height' => variable_get('commerce_ups_default_package_size_height', '0'),
-         ),
-         'PackageWeight' => array(
-           'UnitOfMeasurement' => array(
-             'Code' => 'LBS',
-           ),
-           'Weight' => $weight['weight'] / $number_of_packages,
-         ),
-       ),
-     ),
-   );
-   $rating_request = new SimpleXMLElement('<RatingServiceSelectionRequest/>');
-   _array_to_xml($transaction_request, $rating_request);
-   
-   $rating_request .= $rating_request->asXML();
- }
- 
- $xml = $access_request->asXML() . $rating_request;
- return $xml;
+  /* Pickup Schedule */
+  $schedule_code = variable_get('commerce_ups_pick_up_schedule');
+
+  /* Ship To - Customer Shipping Address */
+  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+  // Prepare the shipping address for use in the request.
+  if (!empty($order_wrapper->commerce_customer_shipping->commerce_customer_address)) {
+    $shipping_address = $order_wrapper->commerce_customer_shipping->commerce_customer_address->value();
+  }
+
+  $encrypted = variable_get('commerce_ups_encrypt', FALSE);
+  $ups_accountid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_account_id', '')) : variable_get('commerce_ups_account_id', '');
+  $ups_userid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_user_id', '')) : variable_get('commerce_ups_user_id', '');
+  $ups_password = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_password', '')) : variable_get('commerce_ups_password', '');
+  $ups_accesskey = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_access_key', '')) : variable_get('commerce_ups_access_key', '');
+
+  $access_request = new SimpleXMLElement('<AccessRequest/>');
+  $access_request->addChild('AccessLicenseNumber', $ups_accesskey);
+  $access_request->addChild('UserId', $ups_userid);
+  $access_request->addChild('Password', $ups_password);
+
+  $rating_requests = '';
+  $transaction_request = array(
+    'Request' => array(
+      'TransactionReference' => array(
+        'CustomerContext' => 'Bare Bones Rate Request',
+        'XpciVersion' => '1.0001',
+      ),
+      'RequestAction' => 'Rate',
+      'RequestOption' => 'Shop',
+    ),
+    'pickupType' => array(
+      'code' => $schedule_code,
+    ),
+    'Shipment' => array(
+      'Shipper' => array(
+        'Address' => array(
+          'PostalCode' => variable_get('commerce_ups_postal_code', ''),
+          'CountryCode' => variable_get('commerce_ups_country_code', ''),
+        ),
+        'ShipperNumber' => $ups_accountid,
+      ),
+      'ShipTo' => array(
+        'Address' => array(
+          'PostalCode' => $shipping_address['postal_code'],
+          'CountryCode' => $shipping_address['country'],
+        ),
+        'ResidentialAddressIndicator' => '',
+      ),
+      'ShipFrom' => array(
+        'Address' => array(
+          'PostalCode' => variable_get('commerce_ups_postal_code', ''),
+          'CountryCode' => variable_get('commerce_ups_country_code', ''),
+        ),
+        'ResidentialAddressIndicator' => '',
+      ),
+    ),
+  );
+
+  $rating_request = new SimpleXMLElement('<RatingServiceSelectionRequest/>');
+  _array_to_xml($transaction_request, $rating_request);
+
+  $package_number = 1;
+  for ($i = 1; $package_number <= $number_of_packages; $i++) {
+    $package = $rating_request->addChild('Package');
+    $package->addChild('PackagingType')->addChild('Code', variable_get('commerce_ups_packaging', '02'));
+    $dimensions = $package->addChild('Dimensions');
+    $dimensions->addChild('UnitOfMeasurement')->addChild('Code', 'IN');
+    $dimensions->addChild('Length', variable_get('commerce_ups_default_package_size_length', '0'));
+    $dimensions->addChild('Width', variable_get('commerce_ups_default_package_size_width', '0'));
+    $dimensions->addChild('Height', variable_get('commerce_ups_default_package_size_height', '0'));
+    $package_weight = $package->addChild('PackageWeight');
+    $package_weight->addChild('UnitOfMeasurement')->addChild('Code', 'LBS');
+    $package_weight->addChild('Weight', $weight['weight'] / $number_of_packages);
+    /*
+    $package = array(
+      'Package' => array(
+        'PackagingType' => array(
+          'Code' => variable_get('commerce_ups_packaging', '02'),
+        ),
+        'Dimensions' => array(
+          'UnitOfMeasurement' => array(
+            'Code' => 'IN',
+          ),
+          'Length' => variable_get('commerce_ups_default_package_size_length', '0'),
+          'Width' => variable_get('commerce_ups_default_package_size_width', '0'),
+          'Height' => variable_get('commerce_ups_default_package_size_height', '0'),
+        ),
+        'PackageWeight' => array(
+          'UnitOfMeasurement' => array(
+            'Code' => 'LBS',
+          ),
+          'Weight' => $weight['weight'] / $number_of_packages,
+        ),
+      ),
+    );
+    */
+    $package_number++;
+  }
+
+  $rating_request .= $rating_request->asXML();
+  print_r($rating_request);
+  die();
+  $xml = $access_request->asXML() . $rating_request;
+  return $xml;
 }
 
 /**
-* Submits an API request to the Progistics XML Processor.
-*
-* @param $xml
-*   An XML string to submit to the Progistics XML Processor.
-* @param $message
-*   Optional log message to use for logged API requests.
-*/
+ * Submits an API request to the Progistics XML Processor.
+ *
+ * @param $xml
+ *   An XML string to submit to the Progistics XML Processor.
+ * @param $message
+ *   Optional log message to use for logged API requests.
+ */
 function commerce_ups_api_request($xml, $message = '') {
- // Log the API request if specified.
- if (in_array('request', variable_get('commerce_ups_log', array()))) {
-   if (empty($message)) {
-     $message = t('Submitting API request to the UPS');
-   }
-   watchdog('ups', '@message:<pre>@xml</pre>', array('@message' => $message, '@xml' => $xml));
- }
- 
+  // Log the API request if specified.
+  if (in_array('request', variable_get('commerce_ups_log', array()))) {
+    if (empty($message)) {
+      $message = t('Submitting API request to the UPS');
+    }
+      watchdog('ups', '@message:<pre>@xml</pre>', array('@message' => $message, '@xml' => $xml));
+    }
 
- $ch = curl_init('https://www.ups.com/ups.app/xml/Rate');  
- curl_setopt($ch, CURLOPT_HEADER, 0);  
- curl_setopt($ch, CURLOPT_POST, 1);  
- curl_setopt($ch, CURLOPT_TIMEOUT, 60);  
- curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);  
- curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);  
- curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);  
- curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);  
- 
- $result = curl_exec ($ch);
+    $ch = curl_init('https://www.ups.com/ups.app/xml/Rate');
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
 
- // Log any errors to the watchdog.
- if ($error = curl_error($ch)) {
-   watchdog('ups', 'cURL error: @error', array('@error' => $error), WATCHDOG_ERROR);
-   return FALSE;
- }
- curl_close($ch);
+    $result = curl_exec($ch);
 
- // If we received data back from the server...
- if (!empty($result)) {
+    // Log any errors to the watchdog.
+    if ($error = curl_error($ch)) {
+      watchdog('ups', 'cURL error: @error', array('@error' => $error), WATCHDOG_ERROR);
+      return FALSE;
+    }
+    curl_close($ch);
 
-   // Extract the result into an XML response object.
-   $response = new SimpleXMLElement($result);
-   
-   // Log the API request if specified.
-   if (in_array('response', variable_get('commerce_ups_log', array()))) {
-     watchdog('ups', 'API response received:<pre>@xml</pre>', array('@xml' => $response->asXML()));
-   }
+    // If we received data back from the server...
+    if (!empty($result)) {
+      // Extract the result into an XML response object.
+      $response = new SimpleXMLElement($result);
 
-   return $response;
- }
- else {
-   return FALSE;
- }
+      // Log the API request if specified.
+      if (in_array('response', variable_get('commerce_ups_log', array()))) {
+      watchdog('ups', 'API response received:<pre>@xml</pre>', array('@xml' => $response->asXML()));
+    }
+    return $response;
+  }
+  else {
+    return FALSE;
+  }
 }
 
 function _array_to_xml($student_info, &$xml_student_info) {
- foreach($student_info as $key => $value) {
-   if(is_array($value)) {
-     if(!is_numeric($key)) {
-       $subnode = $xml_student_info->addChild("$key");
-       _array_to_xml($value, $subnode);
-     } else {
-       _array_to_xml($value, $xml_student_info);
-     }
-   } else {
-     $xml_student_info->addChild("$key","$value");
-   }
- }
+  foreach ($student_info as $key => $value) {
+    if (is_array($value)) {
+      if (!is_numeric($key)) {
+        $subnode = $xml_student_info->addChild("$key");
+        _array_to_xml($value, $subnode);
+      }
+      else {
+        _array_to_xml($value, $xml_student_info);
+      }
+    }
+    else {
+      $xml_student_info->addChild("$key", "$value");
+    }
+  }
 }
 
 function _xml_to_array($xml) {
-  $strXML = simplexml_load_string($xml);
-  $json = json_encode($strXML);
-  return json_decode($json,TRUE);
+  $str_xml = simplexml_load_string($xml);
+  $json = json_encode($str_xml);
+  return json_decode($json, TRUE);
 }
