@@ -1,38 +1,8 @@
 <?php
 
+// $Id$
 
 /**
- * Implements hook_schema().
+ * @file
+ * Handles installation for Commerce UPS module.
  */
-// function commerce_ups_schema() {
-//   $schema = array();
-// 
-//   $schema['commerce_ups_service'] = array(
-//     'description' => 'Stores information needed to retrieve UPS Shipping Information.',
-//     'fields' => array(
-//       'name' => array(
-//         'description' => 'The machine-readable name of the package service.',
-//         'type' => 'varchar',
-//         'length' => 64,
-//         'not null' => TRUE,
-//         'default' => '',
-//       ),
-//       'title' => array(
-//         'description' => 'The human-readable title of the package service.',
-//         'type' => 'varchar',
-//         'length' => 255,
-//         'not null' => TRUE,
-//         'default' => '',
-//       ),
-//       'weight' => array(
-//         'description' => 'The weight assigned this package service when sorting lists of services.',
-//         'type' => 'int',
-//         'not null' => TRUE,
-//         'default' => 0,
-//       ),
-//     ),
-//     'primary key' => array('name'),
-//   );
-// 
-//   return $schema;
-// }

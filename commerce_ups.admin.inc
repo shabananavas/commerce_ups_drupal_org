@@ -1,5 +1,12 @@
 <?php
 
+// $Id$
+
+/**
+ * @file
+ * Handles admin settings page for Commerce UPS module.
+ */
+
 /* hook_settings_form() */
 function commerce_ups_settings_form($form, &$form_state) {
   $form['api'] = array(
@@ -7,12 +14,12 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#title' => t('UPS API credentials'),
     '#collapsible' => TRUE,
   );
-  
+
   $encrypted = variable_get('commerce_ups_encrypt', FALSE);
   $ups_accountid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_account_id', '')) : variable_get('commerce_ups_account_id', '');
   $ups_userid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_user_id', '')) : variable_get('commerce_ups_user_id', '');
   $ups_accesskey = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_access_key', '')) : variable_get('commerce_ups_access_key', '');
-  
+
   $form['api']['commerce_ups_account_id'] = array(
     '#type' => "textfield",
     '#title' => t("Account ID"),
@@ -28,7 +35,7 @@ function commerce_ups_settings_form($form, &$form_state) {
   $form['api']['commerce_ups_password'] = array(
     '#type' => "password",
     '#title' => t("Password"),
-    '#required' => !variable_get('commerce_ups_password', FALSE),     
+    '#required' => !variable_get('commerce_ups_password', FALSE),
   );
   $form['api']['commerce_ups_access_key'] = array(
     '#type' => "textfield",
@@ -36,7 +43,6 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#default_value' => $ups_accesskey,
     '#required' => !variable_get('commerce_ups_access_key', FALSE),
   );
-  
   $form['api']['encryption'] = array(
     '#type' => 'item',
     '#title' => 'Encryption',
@@ -56,9 +62,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     );
   }
   else {
-    $form['api']['encryption']['status']['#markup'] =
-      '<span class="error"><a href="http://drupal.org/project/aes" target="_blank">AES</a> is not 
-      installed - your login credentials will not be encrypted.</span>';
+    $form['api']['encryption']['status']['#markup'] = '<span class="error"><a href="http://drupal.org/project/aes" target="_blank">AES</a> is not installed - your login credentials will not be encrypted.</span>';
   }
 
   $form['origin'] = array(
@@ -66,7 +70,6 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#title' => t("Ship From Address"),
     '#collapsible' => true
   );
-  
   $form['origin']['commerce_ups_company_name'] = array(
     '#type' => "textfield",
     '#title' => t("Company Name"),
@@ -146,14 +149,12 @@ function commerce_ups_settings_form($form, &$form_state) {
       'WY' => t('Wyoming'),
     )
   );
-  
   $form['origin']['commerce_ups_postal_code'] = array(
     '#type' => 'textfield',
     '#title' => t("Postal Code"),
     '#size' => 5,
     '#value' => variable_get('commerce_ups_postal_code')
   );
-  
   $form['origin']['commerce_ups_country_code'] = array(
     '#type' => 'select',
     '#title' => t("Country"),
@@ -163,37 +164,33 @@ function commerce_ups_settings_form($form, &$form_state) {
       'US' => t('United States of America'),
     )
   );
-
   $form['services'] = array(
     '#type' => 'fieldset',
     '#title' => t("Enable UPS Shipping Services"),
     '#collapsible' => TRUE
   );
-  
-  foreach(_commerce_ups_service_list() as $key => $service)
-    $arrOpts[$key] = $service['title'];
+
+  foreach (_commerce_ups_service_list() as $key => $service) {
+    $array_options[$key] = $service['title'];
+  }
   $form['services']['commerce_ups_services'] = array(
     '#type' => 'checkboxes',
-    '#options' => $arrOpts,
+    '#options' => $array_options,
     '#default_value' => variable_get("commerce_ups_services", array())
-  );   
-
+  );
   $form['packaging'] = array(
     '#type' => 'fieldset',
     '#title' => t("Enable UPS Packaging Types"),
     '#collapsible' => FALSE
   );
-  
   $form['packaging']['commerce_ups_packaging_explanation'] = array(
     '#type' => 'markup',
     '#markup' => 'Only "Customer supplied packaging" is currently available. Please enter the default package size below.',
   );
-  
   $form['packaging']['commerce_ups_packaging'] = array(
     '#type' => 'hidden',
     '#value' => '02',
   );
-  
   /*
   $form['packaging']['commerce_ups_packaging'] = array(
     '#type' => 'checkboxes',
@@ -201,15 +198,13 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#default_value' => variable_get("commerce_ups_packaging", array())
   );
   */
- 
-  // Fields for default package size (inches)  
+  // Fields for default package size (inches)
   $form['default_package_size'] = array(
     '#type' => 'fieldset',
     '#title' => t("Default package size (inches)"),
     '#collapsible' => FALSE,
-    '#description' => 'UPS requires a package size when determining estimates.', 
+    '#description' => 'UPS requires a package size when determining estimates.',
   );
-
   $form['default_package_size']['commerce_ups_default_package_size_length'] = array(
     '#type' => 'textfield',
     '#title' => t("Length"),
@@ -217,7 +212,6 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#required' => TRUE,
     '#value' => variable_get('commerce_ups_default_package_size_length'),
   );
- 
   $form['default_package_size']['commerce_ups_default_package_size_width'] = array(
     '#type' => 'textfield',
     '#title' => t("Width"),
@@ -225,7 +219,6 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#required' => TRUE,
     '#value' => variable_get('commerce_ups_default_package_size_width'),
   );
- 
   $form['default_package_size']['commerce_ups_default_package_size_height'] = array(
     '#type' => 'textfield',
     '#title' => t("Height"),
@@ -233,32 +226,28 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#required' => TRUE,
     '#value' => variable_get('commerce_ups_default_package_size_height'),
   );
-  
   $form['default_package_size']['details'] = array(
-    '#markup' => 'The package size is used to determine the number of packages necessary to 
-      create a UPS shipping cost estimate. <strong>If products do not have physical dimensions and 
+    '#markup' => 'The package size is used to determine the number of packages necessary to
+      create a UPS shipping cost estimate. <strong>If products do not have physical dimensions and
       weights associated with them, the estimates will not be accurate.</strong> The logic implemented works as:
       <ul>
       <li>Assume each order requires at least one package.</li>
       <li>Use the combined volume of all products in an order to determine the number of packages.</li>
       </ul>
       This is a simple calculation that can get close to actual shipping costs. More
-      complex logic involving multiple package sizes, weights, and void space can be implemented via 
+      complex logic involving multiple package sizes, weights, and void space can be implemented via
       custom modules.',
   );
-    
   $form['commerce_ups_pick_up_schedule'] = array(
     "#type" => "select",
     "#title" => t("Pick-up Schedule"),
     "#options" => _commerce_ups_pickup_types(),
     "#value" => variable_get("commerce_ups_pick_up_schedule")
   );
-    
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save configuration'),
   );
-
   return $form;
 }
 
@@ -292,7 +281,7 @@ function commerce_ups_settings_form_validate($form, &$form_state) {
   }
 
   /* If we are setting or resetting values, test the connection.
-  $ups_connection = ups_api_function_here(); 
+  $ups_connection = ups_api_function_here();
   if (is_good_connection($ups_connection)) {
     drupal_set_message(t('Connection established. UPS credentials updated.'));
   }
@@ -316,13 +305,13 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
     $form_state['input']['commerce_ups_account_id'] = commerce_ups_encrypt($form_state['input']['commerce_ups_account_id']);
     $form_state['input']['commerce_ups_access_key'] = commerce_ups_encrypt($form_state['input']['commerce_ups_access_key']);
     $form_state['input']['commerce_ups_password'] = commerce_ups_encrypt($form_state['input']['commerce_ups_password']);
-  } 
+  }
   else {
     foreach (array('user_id', 'account_id', 'access_key', 'password') as $value) {
       unset($form_state['input']['commerce_ups_' . $value]);
     }
   }
-  
+
   $fields = array(
     'commerce_ups_account_id',
     'commerce_ups_user_id',
