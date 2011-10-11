@@ -9,6 +9,8 @@
 
 /*
  * This builds the XML to submit to UPS for rates.
+ *
+ * Here's a decent sample of what the resulting XML should look like: http://sameers.me/2011/01/21/ups-rate-request-sample/
  */
 function commerce_ups_build_rate_request($order) {
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
@@ -55,50 +57,39 @@ function commerce_ups_build_rate_request($order) {
   $access_request->addChild('UserId', $ups_userid);
   $access_request->addChild('Password', $ups_password);
 
-  $rating_requests = '';
-  $transaction_request = array(
-    'Request' => array(
-      'TransactionReference' => array(
-        'CustomerContext' => 'Bare Bones Rate Request',
-        'XpciVersion' => '1.0001',
-      ),
-      'RequestAction' => 'Rate',
-      'RequestOption' => 'Shop',
-    ),
-    'pickupType' => array(
-      'code' => $schedule_code,
-    ),
-    'Shipment' => array(
-      'Shipper' => array(
-        'Address' => array(
-          'PostalCode' => variable_get('commerce_ups_postal_code', ''),
-          'CountryCode' => variable_get('commerce_ups_country_code', ''),
-        ),
-        'ShipperNumber' => $ups_accountid,
-      ),
-      'ShipTo' => array(
-        'Address' => array(
-          'PostalCode' => $shipping_address['postal_code'],
-          'CountryCode' => $shipping_address['country'],
-        ),
-        'ResidentialAddressIndicator' => '',
-      ),
-      'ShipFrom' => array(
-        'Address' => array(
-          'PostalCode' => variable_get('commerce_ups_postal_code', ''),
-          'CountryCode' => variable_get('commerce_ups_country_code', ''),
-        ),
-        'ResidentialAddressIndicator' => '',
-      ),
-    ),
-  );
-
   $rating_request = new SimpleXMLElement('<RatingServiceSelectionRequest/>');
-  _array_to_xml($transaction_request, $rating_request);
-
+  
+  $request = $rating_request->addChild('Request');
+  $transaction_reference = $request->addChild('TransactionReference');
+  $transaction_reference->addChild('CustomerContext', 'Bare Bones Rate Request');
+  $transaction_reference->addChild('XpciVersion', '1.0001');
+  $request->addChild('RequestAction', 'Rate');
+  $request->addChild('RequestOption', 'Shop');
+  $request->addChild('pickupType')->addChild('code', $schedule_code);
+  
+  $shipment = $rating_request->addChild('Shipment');
+  
+  $shipper = $shipment->addChild('Shipper');
+  $shipper_address = $shipper->addChild('Address');
+  $shipper_address->addChild('PostalCode', variable_get('commerce_ups_postal_code', ''));
+  $shipper_address->addChild('CountryCode', variable_get('commerce_ups_country_code', ''));
+  $shipper->addChild('ShipperNumber', $ups_accountid);
+  
+  $shipto = $shipment->addChild('ShipTo');
+  $shipto_address = $shipto->addChild('Address');
+  $shipto_address->addChild('PostalCode', $shipping_address['postal_code']);
+  $shipto_address->addChild('CountryCode', $shipping_address['country']);
+  $shipto->addChild('ResidentialAddressIndicator', '');
+  
+  $shipfrom = $shipment->addChild('ShipFrom');
+  $shipfrom_address = $shipfrom->addChild('Address');
+  $shipfrom_address->addChild('PostalCode', variable_get('commerce_ups_postal_code', ''));
+  $shipfrom_address->addChild('CountryCode', variable_get('commerce_ups_county_code', ''));
+  $shipfrom->addChild('ResidentialAddressIndicator', '');
+    
   $package_number = 1;
   for ($i = 1; $package_number <= $number_of_packages; $i++) {
-    $package = $rating_request->addChild('Package');
+    $package = $shipment->addChild('Package');
     $package->addChild('PackagingType')->addChild('Code', variable_get('commerce_ups_packaging', '02'));
     $dimensions = $package->addChild('Dimensions');
     $dimensions->addChild('UnitOfMeasurement')->addChild('Code', 'IN');
@@ -108,35 +99,10 @@ function commerce_ups_build_rate_request($order) {
     $package_weight = $package->addChild('PackageWeight');
     $package_weight->addChild('UnitOfMeasurement')->addChild('Code', 'LBS');
     $package_weight->addChild('Weight', $weight['weight'] / $number_of_packages);
-    /*
-    $package = array(
-      'Package' => array(
-        'PackagingType' => array(
-          'Code' => variable_get('commerce_ups_packaging', '02'),
-        ),
-        'Dimensions' => array(
-          'UnitOfMeasurement' => array(
-            'Code' => 'IN',
-          ),
-          'Length' => variable_get('commerce_ups_default_package_size_length', '0'),
-          'Width' => variable_get('commerce_ups_default_package_size_width', '0'),
-          'Height' => variable_get('commerce_ups_default_package_size_height', '0'),
-        ),
-        'PackageWeight' => array(
-          'UnitOfMeasurement' => array(
-            'Code' => 'LBS',
-          ),
-          'Weight' => $weight['weight'] / $number_of_packages,
-        ),
-      ),
-    );
-    */
     $package_number++;
   }
 
   $rating_request .= $rating_request->asXML();
-  print_r($rating_request);
-  die();
   $xml = $access_request->asXML() . $rating_request;
   return $xml;
 }
@@ -155,34 +121,34 @@ function commerce_ups_api_request($xml, $message = '') {
     if (empty($message)) {
       $message = t('Submitting API request to the UPS');
     }
-      watchdog('ups', '@message:<pre>@xml</pre>', array('@message' => $message, '@xml' => $xml));
-    }
+    watchdog('ups', '@message:<pre>@xml</pre>', array('@message' => $message, '@xml' => $xml));
+  }
 
-    $ch = curl_init('https://www.ups.com/ups.app/xml/Rate');
-    curl_setopt($ch, CURLOPT_HEADER, 0);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
+  $ch = curl_init('https://www.ups.com/ups.app/xml/Rate');
+  curl_setopt($ch, CURLOPT_HEADER, 0);
+  curl_setopt($ch, CURLOPT_POST, 1);
+  curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+  curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
 
-    $result = curl_exec($ch);
+  $result = curl_exec($ch);
 
-    // Log any errors to the watchdog.
-    if ($error = curl_error($ch)) {
-      watchdog('ups', 'cURL error: @error', array('@error' => $error), WATCHDOG_ERROR);
-      return FALSE;
-    }
-    curl_close($ch);
+  // Log any errors to the watchdog.
+  if ($error = curl_error($ch)) {
+    watchdog('ups', 'cURL error: @error', array('@error' => $error), WATCHDOG_ERROR);
+    return FALSE;
+  }
+  curl_close($ch);
 
-    // If we received data back from the server...
-    if (!empty($result)) {
-      // Extract the result into an XML response object.
-      $response = new SimpleXMLElement($result);
+  // If we received data back from the server...
+  if (!empty($result)) {
+    // Extract the result into an XML response object.
+    $response = new SimpleXMLElement($result);
 
-      // Log the API request if specified.
-      if (in_array('response', variable_get('commerce_ups_log', array()))) {
+    // Log the API request if specified.
+    if (in_array('response', variable_get('commerce_ups_log', array()))) {
       watchdog('ups', 'API response received:<pre>@xml</pre>', array('@xml' => $response->asXML()));
     }
     return $response;
