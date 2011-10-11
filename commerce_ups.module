@@ -72,8 +72,7 @@ function commerce_ups_commerce_shipping_service_info() {
  */
 function commerce_ups_service_rate_order($shipping_service, $order) {
   // First attempt to recover cached shipping rates for the current order.
-  $rates = commerce_shipping_rates_cache_get('ups', $order, variable_get('commerce_ups_rates_timeout', 6));
-
+  $rates = commerce_shipping_rates_cache_get('ups', $order, variable_get('commerce_ups_rates_timeout', 0));
   // If no rates were recovered from the cache or the cached rates are over one minute old...
   if (!$rates) {
     $rates = array();
