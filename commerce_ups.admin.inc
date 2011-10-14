@@ -334,8 +334,10 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
   );
 
   foreach ($fields as $key) {
-    $value = $form_state['input'][$key];
-    variable_set($key, $value);
+    if (array_key_exists($key, $form_state['input'])) {
+      $value = $form_state['input'][$key];
+      variable_set($key, $value);
+    }
   }
 
   drupal_set_message(t('The UPS configuration options have been saved.'));
