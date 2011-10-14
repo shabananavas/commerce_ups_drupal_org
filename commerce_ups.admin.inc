@@ -62,7 +62,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     );
   }
   else {
-    $form['api']['encryption']['status']['#markup'] = '<span class="error"><a href="http://drupal.org/project/aes" target="_blank">AES</a> is not installed - your login credentials will not be encrypted.</span>';
+    $form['api']['encryption']['status']['#markup'] = '<span class="error">'. l('AES','http://drupal.org/project/aes', array('attributes' => array('target' => '_blank'))) .'is not installed - your login credentials will not be encrypted.</span>';
   }
 
   $form['origin'] = array(
