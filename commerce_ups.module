@@ -111,6 +111,19 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
 }
 
 /**
+ * hook_form_alter()
+ */
+function commerce_ups_form_alter(&$form, &$form_state, $form_id) {
+  if("commerce_checkout_form_shipping" == $form_id) {
+    $image = drupal_get_path('module', 'commerce_ups') . '/images/ups-logo.png';
+    if(file_exists($image)) {
+      $form["commerce_shipping"]["#title"] = $form["commerce_shipping"]["#title"] . theme("image", array("path" => $image));
+    }
+  }
+}
+
+
+/**
  * Convenience function to get UPS codes for their services.
  */
 function _commerce_ups_service_list() {
