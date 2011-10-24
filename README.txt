@@ -22,7 +22,7 @@ Obviously, this module depends on the Commerce module (http://www.drupal.org/pro
 
 2. Configure the "Shipping Service" checkout pane so that it is on the "Shipping" page. The "Shipping Service" checkout pane MUST be on a later page than the "Shipping information" pane. (admin/commerce/config/checkout)
 
-3. Configure the UPS settings. You'll need to create an account at http://ups.com to obtain the proper credentials. (admin/commerce/config/shipping/methods/ups/edit)
+3. Configure the UPS settings (admin/commerce/config/shipping/methods/ups/edit). You'll need to create UPS account and obtain an access key via https://www.ups.com/upsdeveloperkit. 
 
 - - - - - Limitations
 

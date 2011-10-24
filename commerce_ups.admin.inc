@@ -13,7 +13,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#type' => 'fieldset',
     '#title' => t('UPS API credentials'),
     '#collapsible' => TRUE,
-    '#description' => t('In order to obtain shipping rate estimates, you must have an account with UPS. You can apply for UPS API credentials at '. l('UPS.com', 'https://www.ups.com/one-to-one/register', array('attributes' => array('target'=>'_blank')))),
+    '#description' => t('In order to obtain shipping rate estimates, you must have an account with UPS. You can apply for UPS API credentials at '. l('UPS.com', 'https://www.ups.com/upsdeveloperkit', array('attributes' => array('target'=>'_blank')))),
   );
 
   $encrypted = variable_get('commerce_ups_encrypt', FALSE);
