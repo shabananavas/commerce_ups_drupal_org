@@ -13,6 +13,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#type' => 'fieldset',
     '#title' => t('UPS API credentials'),
     '#collapsible' => TRUE,
+    '#description' => t('In order to obtain shipping rate estimates, you must have an account with UPS. You can apply for UPS API credentials at '. l('UPS.com', 'https://www.ups.com/one-to-one/register', array('attributes' => array('target'=>'_blank')))),
   );
 
   $encrypted = variable_get('commerce_ups_encrypt', FALSE);
@@ -36,6 +37,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#type' => "password",
     '#title' => t("Password"),
     '#required' => !variable_get('commerce_ups_password', FALSE),
+    '#description' => t('Please leave blank if you do not want to update your password at this time.'),
   );
   $form['api']['commerce_ups_access_key'] = array(
     '#type' => "textfield",
@@ -254,29 +256,10 @@ function commerce_ups_settings_form($form, &$form_state) {
 /* hook_settings_form_validate() */
 function commerce_ups_settings_form_validate($form, &$form_state) {
   $values = $form_state['values'];
-
-  $errors = array();
-  foreach (array('commerce_ups_account_id', 'commerce_ups_user_id', 'commerce_ups_access_key', 'commerce_ups_password') as $value) {
-    if (empty($values[$value])) {
-      $errors[$value] = ucwords(str_replace('commerce_ups_', ' ', $value)) . ' is required';
-    }
-  }
-
-  if (count($errors) == 4) {
-    // If all 4 fields are empty, the user has not tried to change credentials.
-    // Unset the form values in order to preserve existing credentials.
-    unset($form_state['values']['commerce_ups_account_id'],
-          $form_state['values']['commerce_ups_user_id'],
-          $form_state['values']['commerce_ups_access_key'],
-          $form_state['values']['commerce_ups_password']);
-    return;
-  }
-  elseif (count($errors)) {
-    drupal_set_message(t('Unable to reset UPS credentials.'), 'error');
-    foreach ($errors as $field => $error) {
-      form_set_error($field, check_plain($error));
-    }
-    // If we got errors already no need to continue with validation.
+  
+  // If the Password field is empty, then they're not trying to update it and we should ignore it.
+  if (empty($values['commerce_ups_password'])) {
+    unset($form_state['values']['commerce_ups_password']);
     return;
   }
 
@@ -300,16 +283,18 @@ function commerce_ups_settings_form_validate($form, &$form_state) {
  * Implements hook_form_submit().
  */
 function commerce_ups_settings_form_submit($form, &$form_state) {
-  if ($form_state['input']['commerce_ups_encrypt'] && !empty($form_state['input']['commerce_ups_user_id'])) {
+  // Encrypt the UPS API credentials if available
+  if ($form_state['input']['commerce_ups_encrypt']) {
     $form_state['input']['commerce_ups_user_id'] = commerce_ups_encrypt($form_state['input']['commerce_ups_user_id']);
     $form_state['input']['commerce_ups_account_id'] = commerce_ups_encrypt($form_state['input']['commerce_ups_account_id']);
     $form_state['input']['commerce_ups_access_key'] = commerce_ups_encrypt($form_state['input']['commerce_ups_access_key']);
-    $form_state['input']['commerce_ups_password'] = commerce_ups_encrypt($form_state['input']['commerce_ups_password']);
+  }
+  
+  if (empty($form_state['input']['commerce_ups_password'])) {
+    unset($form_state['input']['commerce_ups_password']);
   }
   else {
-    foreach (array('user_id', 'account_id', 'access_key', 'password') as $value) {
-      unset($form_state['input']['commerce_ups_' . $value]);
-    }
+    $form_state['input']['commerce_ups_password']= commerce_ups_encrypt($form_state['input']['commerce_ups_password']);
   }
 
   $fields = array(
