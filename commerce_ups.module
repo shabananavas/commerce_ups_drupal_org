@@ -116,7 +116,7 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
 function commerce_ups_form_alter(&$form, &$form_state, $form_id) {
   if("commerce_checkout_form_shipping" == $form_id) {
     $image = drupal_get_path('module', 'commerce_ups') . '/images/ups-logo.png';
-    if(file_exists($image)) {
+    if(file_exists($image) && variable_get("commerce_ups_show_logo", false)) {
       $form["commerce_shipping"]["#title"] = $form["commerce_shipping"]["#title"] . theme("image", array("path" => $image));
     }
   }
