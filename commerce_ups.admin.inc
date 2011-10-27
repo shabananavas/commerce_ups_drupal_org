@@ -246,6 +246,11 @@ function commerce_ups_settings_form($form, &$form_state) {
     "#options" => _commerce_ups_pickup_types(),
     "#value" => variable_get("commerce_ups_pick_up_schedule")
   );
+  $form['commerce_ups_show_logo'] = array(
+    "#type" => "checkbox",
+    "#title" => t("Show UPS Logo on Shipping Page"),
+    "#default_value" => variable_get("commerce_ups_show_logo", 0),
+  );
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save configuration'),
@@ -313,6 +318,7 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
     'commerce_ups_country_code',
     'commerce_ups_packaging',
     'commerce_ups_pick_up_schedule',
+    'commerce_ups_show_logo',
     'commerce_ups_default_package_size_length',
     'commerce_ups_default_package_size_width',
     'commerce_ups_default_package_size_height',
