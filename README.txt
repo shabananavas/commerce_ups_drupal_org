@@ -18,11 +18,13 @@ Obviously, this module depends on the Commerce module (http://www.drupal.org/pro
 
 - - - - - Installation
 
-1. Install and enable the module and all dependencies. Add dimensions and weight fields from Commerce Physical to all shippable product types. Populate dimensions and weight fields for all produts.
+1. Install and enable the module and all dependencies (be sure to use the latest versions of everything). Add dimensions and weight fields (new field types via the Commerce Physical module) to all shippable product types. Populate dimensions and weight fields for all products.
 
-2. Configure the "Shipping Service" checkout pane so that it is on the "Shipping" page. The "Shipping Service" checkout pane MUST be on a later page than the "Shipping information" pane. (admin/commerce/config/checkout)
+2. Configure the "Shipping service" checkout pane so that it is on the "Shipping" page. The "Shipping service" checkout pane MUST be on a later page than the "Shipping information" pane. (admin/commerce/config/checkout)
 
 3. Configure the UPS settings (admin/commerce/config/shipping/methods/ups/edit). You'll need to create UPS account and obtain an access key via https://www.ups.com/upsdeveloperkit. 
+
+4. Optionally install and configure the AES encryption module (http://www.drupal.org/project/aes). This will help keep your UPS credentials secure.
 
 - - - - - Limitations
 
