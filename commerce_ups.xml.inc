@@ -84,7 +84,7 @@ function commerce_ups_build_rate_request($order) {
   $shipfrom = $shipment->addChild('ShipFrom');
   $shipfrom_address = $shipfrom->addChild('Address');
   $shipfrom_address->addChild('PostalCode', variable_get('commerce_ups_postal_code', ''));
-  $shipfrom_address->addChild('CountryCode', variable_get('commerce_ups_county_code', ''));
+  $shipfrom_address->addChild('CountryCode', variable_get('commerce_ups_country_code', ''));
   $shipfrom->addChild('ResidentialAddressIndicator', '');
     
   $package_number = 1;
