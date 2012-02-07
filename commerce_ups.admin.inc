@@ -77,27 +77,27 @@ function commerce_ups_settings_form($form, &$form_state) {
   $form['origin']['commerce_ups_company_name'] = array(
     '#type' => 'textfield',
     '#title' => t('Company Name'),
-    '#value' => variable_get('commerce_ups_company_name')
+    '#default_value' => variable_get('commerce_ups_company_name')
   );
   $form['origin']['commerce_ups_address_line_1'] = array(
     '#type' => 'textfield',
     '#title' => t('Address'),
-    '#value' => variable_get('commerce_ups_address_line_1')
+    '#default_value' => variable_get('commerce_ups_address_line_1')
   );
   $form['origin']['commerce_ups_address_line_2'] = array(
     '#type' => 'textfield',
     '#title' => t('Address (Additional)'),
-    '#value' => variable_get('commerce_ups_address_line_2')
+    '#default_value' => variable_get('commerce_ups_address_line_2')
   );
   $form['origin']['commerce_ups_city'] = array(
     '#type' => 'textfield',
     '#title' => t('City'),
-    '#value' => variable_get('commerce_ups_city')
+    '#default_value' => variable_get('commerce_ups_city')
   );
   $form['origin']['commerce_ups_state'] = array(
     '#type' => 'select',
     '#title' => t('State'),
-    '#value' => variable_get('commerce_ups_state'),
+    '#default_value' => variable_get('commerce_ups_state'),
     '#options' => array(
       '' => t('Please Select'),
       'AL' => t('Alabama'),
@@ -157,12 +157,12 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Postal Code'),
     '#size' => 5,
-    '#value' => variable_get('commerce_ups_postal_code')
+    '#default_value' => variable_get('commerce_ups_postal_code')
   );
   $form['origin']['commerce_ups_country_code'] = array(
     '#type' => 'select',
     '#title' => t('Country'),
-    '#value' => variable_get('commerce_ups_country_code'),
+    '#default_value' => variable_get('commerce_ups_country_code'),
     '#options' => array(
       '' => t('Please Select'),
       'US' => t('United States of America'),
@@ -214,21 +214,21 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#title' => t('Length'),
     '#size' => 5,
     '#required' => TRUE,
-    '#value' => variable_get('commerce_ups_default_package_size_length'),
+    '#default_value' => variable_get('commerce_ups_default_package_size_length'),
   );
   $form['default_package_size']['commerce_ups_default_package_size_width'] = array(
     '#type' => 'textfield',
     '#title' => t('Width'),
     '#size' => 5,
     '#required' => TRUE,
-    '#value' => variable_get('commerce_ups_default_package_size_width'),
+    '#default_value' => variable_get('commerce_ups_default_package_size_width'),
   );
   $form['default_package_size']['commerce_ups_default_package_size_height'] = array(
     '#type' => 'textfield',
     '#title' => t('Height'),
     '#size' => 5,
     '#required' => TRUE,
-    '#value' => variable_get('commerce_ups_default_package_size_height'),
+    '#default_value' => variable_get('commerce_ups_default_package_size_height'),
   );
   $form['default_package_size']['details'] = array(
     '#markup' => 'The package size is used to determine the number of packages necessary to
@@ -246,7 +246,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#type' => 'select',
     '#title' => t('Pick-up Schedule'),
     '#options' => _commerce_ups_pickup_types(),
-    '#value' => variable_get('commerce_ups_pick_up_schedule')
+    '#default_value' => variable_get('commerce_ups_pick_up_schedule')
   );
   $form['commerce_ups_show_logo'] = array(
     '#type' => 'checkbox',
