@@ -9,11 +9,12 @@
 
 /* hook_settings_form() */
 function commerce_ups_settings_form($form, &$form_state) {
+  $ups_link = l('UPS.com', 'https://www.ups.com/upsdeveloperkit', array('attributes' => array('target'=>'_blank')));
   $form['api'] = array(
     '#type' => 'fieldset',
     '#title' => t('UPS API credentials'),
     '#collapsible' => TRUE,
-    '#description' => t('In order to obtain shipping rate estimates, you must have an account with UPS. You can apply for UPS API credentials at '. l('UPS.com', 'https://www.ups.com/upsdeveloperkit', array('attributes' => array('target'=>'_blank')))),
+    '#description' => t('In order to obtain shipping rate estimates, you must have an account with UPS. You can apply for UPS API credentials at !ups', array('!ups' => $ups_link)),
   );
 
   $encrypted = variable_get('commerce_ups_encrypt', FALSE);
@@ -22,32 +23,32 @@ function commerce_ups_settings_form($form, &$form_state) {
   $ups_accesskey = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_access_key', '')) : variable_get('commerce_ups_access_key', '');
 
   $form['api']['commerce_ups_account_id'] = array(
-    '#type' => "textfield",
-    '#title' => t("Account ID"),
+    '#type' => 'textfield',
+    '#title' => t('Account ID'),
     '#default_value' => $ups_accountid,
-    '#required' => !variable_get('commerce_ups_account_id', FALSE),
+    '#required' => TRUE,
   );
   $form['api']['commerce_ups_user_id'] = array(
-    '#type' => "textfield",
-    '#title' => t("User ID"),
+    '#type' => 'textfield',
+    '#title' => t('User ID'),
     '#default_value' => $ups_userid,
-    '#required' => !variable_get('commerce_ups_user_id', FALSE),
+    '#required' => TRUE,
   );
   $form['api']['commerce_ups_password'] = array(
-    '#type' => "password",
-    '#title' => t("Password"),
+    '#type' => 'password',
+    '#title' => t('Password'),
     '#required' => !variable_get('commerce_ups_password', FALSE),
     '#description' => t('Please leave blank if you do not want to update your password at this time.'),
   );
   $form['api']['commerce_ups_access_key'] = array(
-    '#type' => "textfield",
-    '#title' => t("Access Key"),
+    '#type' => 'textfield',
+    '#title' => t('Access Key'),
     '#default_value' => $ups_accesskey,
-    '#required' => !variable_get('commerce_ups_access_key', FALSE),
+    '#required' => TRUE,
   );
   $form['api']['encryption'] = array(
     '#type' => 'item',
-    '#title' => 'Encryption',
+    '#title' => t('Encryption'),
     'status' => array(
       '#type' => 'item',
       '#title' => FALSE,
@@ -58,43 +59,44 @@ function commerce_ups_settings_form($form, &$form_state) {
       'Encryption is available and configured properly.';
     $form['api']['encryption']['commerce_ups_encrypt'] = array(
       '#type' => 'checkbox',
-      '#title' => 'Encrypt UPS credentials (HIGHLY RECOMMENDED)',
-      '#description' => 'Note: enabling this setting will not encrypt existing credentials.',
+      '#title' => t('Encrypt UPS credentials (HIGHLY RECOMMENDED)'),
+      '#description' => t('Note: enabling this setting will not encrypt existing credentials.'),
       '#default_value' => TRUE,
     );
   }
   else {
-    $form['api']['encryption']['status']['#markup'] = '<span class="error">'. l('AES','http://drupal.org/project/aes', array('attributes' => array('target' => '_blank'))) .'is not installed - your login credentials will not be encrypted.</span>';
+    $aes_link = l(t('AES'), 'http://drupal.org/project/aes', array('attributes' => array('target' => '_blank')));
+    $form['api']['encryption']['status']['#markup'] = '<span class="error">'. t('!aes is not installed - your login credentials will not be encrypted.', array('!aes' => $aes_link)) .'</span>';
   }
 
   $form['origin'] = array(
-    '#type' => "fieldset",
-    '#title' => t("Ship From Address"),
-    '#collapsible' => true
+    '#type' => 'fieldset',
+    '#title' => t('Ship From Address'),
+    '#collapsible' => TRUE,
   );
   $form['origin']['commerce_ups_company_name'] = array(
-    '#type' => "textfield",
-    '#title' => t("Company Name"),
+    '#type' => 'textfield',
+    '#title' => t('Company Name'),
     '#value' => variable_get('commerce_ups_company_name')
   );
   $form['origin']['commerce_ups_address_line_1'] = array(
     '#type' => 'textfield',
-    '#title' => t("Address"),
+    '#title' => t('Address'),
     '#value' => variable_get('commerce_ups_address_line_1')
   );
   $form['origin']['commerce_ups_address_line_2'] = array(
     '#type' => 'textfield',
-    '#title' => t("Address (Additional)"),
+    '#title' => t('Address (Additional)'),
     '#value' => variable_get('commerce_ups_address_line_2')
   );
   $form['origin']['commerce_ups_city'] = array(
     '#type' => 'textfield',
-    '#title' => t("City"),
+    '#title' => t('City'),
     '#value' => variable_get('commerce_ups_city')
   );
   $form['origin']['commerce_ups_state'] = array(
     '#type' => 'select',
-    '#title' => t("State"),
+    '#title' => t('State'),
     '#value' => variable_get('commerce_ups_state'),
     '#options' => array(
       '' => t('Please Select'),
@@ -153,13 +155,13 @@ function commerce_ups_settings_form($form, &$form_state) {
   );
   $form['origin']['commerce_ups_postal_code'] = array(
     '#type' => 'textfield',
-    '#title' => t("Postal Code"),
+    '#title' => t('Postal Code'),
     '#size' => 5,
     '#value' => variable_get('commerce_ups_postal_code')
   );
   $form['origin']['commerce_ups_country_code'] = array(
     '#type' => 'select',
-    '#title' => t("Country"),
+    '#title' => t('Country'),
     '#value' => variable_get('commerce_ups_country_code'),
     '#options' => array(
       '' => t('Please Select'),
@@ -168,8 +170,8 @@ function commerce_ups_settings_form($form, &$form_state) {
   );
   $form['services'] = array(
     '#type' => 'fieldset',
-    '#title' => t("Enable UPS Shipping Services"),
-    '#collapsible' => TRUE
+    '#title' => t('Enable UPS Shipping Services'),
+    '#collapsible' => TRUE,
   );
 
   foreach (_commerce_ups_service_list() as $key => $service) {
@@ -178,16 +180,16 @@ function commerce_ups_settings_form($form, &$form_state) {
   $form['services']['commerce_ups_services'] = array(
     '#type' => 'checkboxes',
     '#options' => $array_options,
-    '#default_value' => variable_get("commerce_ups_services", array())
+    '#default_value' => variable_get('commerce_ups_services', array())
   );
   $form['packaging'] = array(
     '#type' => 'fieldset',
-    '#title' => t("Enable UPS Packaging Types"),
-    '#collapsible' => FALSE
+    '#title' => t('Enable UPS Packaging Types'),
+    '#collapsible' => FALSE,
   );
   $form['packaging']['commerce_ups_packaging_explanation'] = array(
     '#type' => 'markup',
-    '#markup' => 'Only "Customer supplied packaging" is currently available. Please enter the default package size below.',
+    '#markup' => t('Only "Customer supplied packaging" is currently available. Please enter the default package size below.'),
   );
   $form['packaging']['commerce_ups_packaging'] = array(
     '#type' => 'hidden',
@@ -203,27 +205,27 @@ function commerce_ups_settings_form($form, &$form_state) {
   // Fields for default package size (inches)
   $form['default_package_size'] = array(
     '#type' => 'fieldset',
-    '#title' => t("Default package size (inches)"),
+    '#title' => t('Default package size (inches)'),
     '#collapsible' => FALSE,
     '#description' => 'UPS requires a package size when determining estimates.',
   );
   $form['default_package_size']['commerce_ups_default_package_size_length'] = array(
     '#type' => 'textfield',
-    '#title' => t("Length"),
+    '#title' => t('Length'),
     '#size' => 5,
     '#required' => TRUE,
     '#value' => variable_get('commerce_ups_default_package_size_length'),
   );
   $form['default_package_size']['commerce_ups_default_package_size_width'] = array(
     '#type' => 'textfield',
-    '#title' => t("Width"),
+    '#title' => t('Width'),
     '#size' => 5,
     '#required' => TRUE,
     '#value' => variable_get('commerce_ups_default_package_size_width'),
   );
   $form['default_package_size']['commerce_ups_default_package_size_height'] = array(
     '#type' => 'textfield',
-    '#title' => t("Height"),
+    '#title' => t('Height'),
     '#size' => 5,
     '#required' => TRUE,
     '#value' => variable_get('commerce_ups_default_package_size_height'),
@@ -241,15 +243,15 @@ function commerce_ups_settings_form($form, &$form_state) {
       custom modules.',
   );
   $form['commerce_ups_pick_up_schedule'] = array(
-    "#type" => "select",
-    "#title" => t("Pick-up Schedule"),
-    "#options" => _commerce_ups_pickup_types(),
-    "#value" => variable_get("commerce_ups_pick_up_schedule")
+    '#type' => 'select',
+    '#title' => t('Pick-up Schedule'),
+    '#options' => _commerce_ups_pickup_types(),
+    '#value' => variable_get('commerce_ups_pick_up_schedule')
   );
   $form['commerce_ups_show_logo'] = array(
-    "#type" => "checkbox",
-    "#title" => t("Show UPS Logo on Shipping Page"),
-    "#default_value" => variable_get("commerce_ups_show_logo", 0),
+    '#type' => 'checkbox',
+    '#title' => t('Show UPS Logo on Shipping Page'),
+    '#default_value' => variable_get('commerce_ups_show_logo', 0),
   );
   $form['actions']['submit'] = array(
     '#type' => 'submit',
