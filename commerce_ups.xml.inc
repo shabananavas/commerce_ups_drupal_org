@@ -1,7 +1,5 @@
 <?php
 
-// $Id$
-
 /**
  * @file
  * Handles XML-related stuff for Commerce UPS module.
@@ -58,7 +56,7 @@ function commerce_ups_build_rate_request($order) {
   $access_request->addChild('Password', $ups_password);
 
   $rating_request = new SimpleXMLElement('<RatingServiceSelectionRequest/>');
-  
+
   $request = $rating_request->addChild('Request');
   $transaction_reference = $request->addChild('TransactionReference');
   $transaction_reference->addChild('CustomerContext', 'Bare Bones Rate Request');
@@ -66,27 +64,27 @@ function commerce_ups_build_rate_request($order) {
   $request->addChild('RequestAction', 'Rate');
   $request->addChild('RequestOption', 'Shop');
   $request->addChild('pickupType')->addChild('code', $schedule_code);
-  
+
   $shipment = $rating_request->addChild('Shipment');
-  
+
   $shipper = $shipment->addChild('Shipper');
   $shipper_address = $shipper->addChild('Address');
   $shipper_address->addChild('PostalCode', variable_get('commerce_ups_postal_code', ''));
   $shipper_address->addChild('CountryCode', variable_get('commerce_ups_country_code', ''));
   $shipper->addChild('ShipperNumber', $ups_accountid);
-  
+
   $shipto = $shipment->addChild('ShipTo');
   $shipto_address = $shipto->addChild('Address');
   $shipto_address->addChild('PostalCode', $shipping_address['postal_code']);
   $shipto_address->addChild('CountryCode', $shipping_address['country']);
   $shipto->addChild('ResidentialAddressIndicator', '');
-  
+
   $shipfrom = $shipment->addChild('ShipFrom');
   $shipfrom_address = $shipfrom->addChild('Address');
   $shipfrom_address->addChild('PostalCode', variable_get('commerce_ups_postal_code', ''));
   $shipfrom_address->addChild('CountryCode', variable_get('commerce_ups_country_code', ''));
   $shipfrom->addChild('ResidentialAddressIndicator', '');
-    
+
   $package_number = 1;
   for ($i = 1; $package_number <= $number_of_packages; $i++) {
     $package = $shipment->addChild('Package');

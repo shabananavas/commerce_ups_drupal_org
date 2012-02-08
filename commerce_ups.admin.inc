@@ -1,7 +1,5 @@
 <?php
 
-// $Id$
-
 /**
  * @file
  * Handles admin settings page for Commerce UPS module.
@@ -9,7 +7,7 @@
 
 /* hook_settings_form() */
 function commerce_ups_settings_form($form, &$form_state) {
-  $ups_link = l('UPS.com', 'https://www.ups.com/upsdeveloperkit', array('attributes' => array('target'=>'_blank')));
+  $ups_link = l(t('UPS.com'), 'https://www.ups.com/upsdeveloperkit', array('attributes' => array('target' => '_blank')));
   $form['api'] = array(
     '#type' => 'fieldset',
     '#title' => t('UPS API credentials'),
@@ -66,7 +64,7 @@ function commerce_ups_settings_form($form, &$form_state) {
   }
   else {
     $aes_link = l(t('AES'), 'http://drupal.org/project/aes', array('attributes' => array('target' => '_blank')));
-    $form['api']['encryption']['status']['#markup'] = '<span class="error">'. t('!aes is not installed - your login credentials will not be encrypted.', array('!aes' => $aes_link)) .'</span>';
+    $form['api']['encryption']['status']['#markup'] = '<span class="error">' . t('!aes is not installed - your login credentials will not be encrypted.', array('!aes' => $aes_link)) . '</span>';
   }
 
   $form['origin'] = array(
@@ -263,7 +261,7 @@ function commerce_ups_settings_form($form, &$form_state) {
 /* hook_settings_form_validate() */
 function commerce_ups_settings_form_validate($form, &$form_state) {
   $values = $form_state['values'];
-  
+
   // If the Password field is empty, then they're not trying to update it and we should ignore it.
   if (empty($values['commerce_ups_password'])) {
     unset($form_state['values']['commerce_ups_password']);
@@ -296,7 +294,7 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
     $form_state['input']['commerce_ups_account_id'] = commerce_ups_encrypt($form_state['input']['commerce_ups_account_id']);
     $form_state['input']['commerce_ups_access_key'] = commerce_ups_encrypt($form_state['input']['commerce_ups_access_key']);
   }
-  
+
   if (empty($form_state['input']['commerce_ups_password'])) {
     unset($form_state['input']['commerce_ups_password']);
   }

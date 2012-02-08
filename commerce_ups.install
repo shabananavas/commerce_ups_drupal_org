@@ -1,14 +1,12 @@
 <?php
 
-// $Id$
-
 /**
  * @file
  * Handles installation for Commerce UPS module.
  */
 
 /**
- * Implements hook_uninstall()
+ * Implements hook_uninstall().
  */
 function commerce_ups_uninstall() {
   $fields = array(

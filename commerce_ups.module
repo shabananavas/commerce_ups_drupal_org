@@ -114,9 +114,9 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
  * hook_form_alter()
  */
 function commerce_ups_form_alter(&$form, &$form_state, $form_id) {
-  if("commerce_checkout_form_shipping" == $form_id) {
+  if ("commerce_checkout_form_shipping" == $form_id) {
     $image = drupal_get_path('module', 'commerce_ups') . '/images/ups-logo.png';
-    if(file_exists($image) && variable_get("commerce_ups_show_logo", false)) {
+    if (file_exists($image) && variable_get("commerce_ups_show_logo", FALSE)) {
       $form["commerce_shipping"]["#title"] = $form["commerce_shipping"]["#title"] . theme("image", array("path" => $image));
     }
   }
@@ -146,7 +146,7 @@ function _commerce_ups_service_list() {
 
   /* Make a unique ID to identify the service by */
   foreach ($services as $key => $service) {
-    $service['slug'] = str_replace(" ", "_", strtolower($service['title']));
+    $service['slug'] = str_replace(" ", "_", drupal_strtolower($service['title']));
     $services[$key] = $service;
   }
   return $services;
@@ -223,11 +223,8 @@ function commerce_ups_encryption_available($options = array()) {
     $errors[] = 'AES Encryption module is not installed.';
   }
   elseif ($check_config) {
-    if (!variable_get('aes_key_path', FALSE)
-      || variable_get('aes_key_storage_method', FALSE) != 'File') {
-      $warnings[] = 'AES Encryption is installed but not configured securely.
-        Please go '. l('configure AES Encryption to use
-        file storage','admin/settings/aes'). ' to enable encryption for UPS credentials.';
+    if (!variable_get('aes_key_path', FALSE) || variable_get('aes_key_storage_method', FALSE) != 'File') {
+      $warnings[] = 'AES Encryption is installed but not configured securely. Please go ' . l('configure AES Encryption to use file storage', 'admin/settings/aes') . ' to enable encryption for UPS credentials.';
     }
   }
 
