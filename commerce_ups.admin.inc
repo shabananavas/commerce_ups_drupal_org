@@ -294,7 +294,7 @@ function commerce_ups_settings_form_validate($form, &$form_state) {
  */
 function commerce_ups_settings_form_submit($form, &$form_state) {
   // Encrypt the UPS API credentials if available
-  if ($form_state['input']['commerce_ups_encrypt']) {
+  if (isset($form_state['input']['commerce_ups_encrypt']) && $form_state['input']['commerce_ups_encrypt']) {
     $form_state['input']['commerce_ups_user_id'] = commerce_ups_encrypt($form_state['input']['commerce_ups_user_id']);
     $form_state['input']['commerce_ups_account_id'] = commerce_ups_encrypt($form_state['input']['commerce_ups_account_id']);
     $form_state['input']['commerce_ups_access_key'] = commerce_ups_encrypt($form_state['input']['commerce_ups_access_key']);
