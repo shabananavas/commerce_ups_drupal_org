@@ -77,7 +77,9 @@ function commerce_ups_build_rate_request($order) {
   $shipto_address = $shipto->addChild('Address');
   $shipto_address->addChild('PostalCode', $shipping_address['postal_code']);
   $shipto_address->addChild('CountryCode', $shipping_address['country']);
-  $shipto->addChild('ResidentialAddressIndicator', '');
+  if (variable_get('commerce_ups_shipto_residential', FALSE)) {
+    $shipto_address->addChild('ResidentialAddressIndicator', 'true');
+  }
 
   $shipfrom = $shipment->addChild('ShipFrom');
   $shipfrom_address = $shipfrom->addChild('Address');

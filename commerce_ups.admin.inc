@@ -246,6 +246,11 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#options' => _commerce_ups_pickup_types(),
     '#default_value' => variable_get('commerce_ups_pick_up_schedule')
   );
+  $form['commerce_ups_shipto_residential'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Calculate ALL ship to addresses as residential.'),
+    '#default_value' => variable_get('commerce_ups_shipto_residential', 0),
+  );
   $form['commerce_ups_show_logo'] = array(
     '#type' => 'checkbox',
     '#title' => t('Show UPS Logo on Shipping Page'),
@@ -322,6 +327,7 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
     'commerce_ups_default_package_size_length',
     'commerce_ups_default_package_size_width',
     'commerce_ups_default_package_size_height',
+    'commerce_ups_shipto_residential',
   );
 
   foreach ($fields as $key) {

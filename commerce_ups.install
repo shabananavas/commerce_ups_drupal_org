@@ -30,6 +30,7 @@ function commerce_ups_uninstall() {
     'commerce_ups_default_package_size_width',
     'commerce_ups_default_package_size_height',
     'commerce_ups_rates_timeout',
+    'commerce_ups_shipto_residential',
   );
 
   foreach ($fields as $data) {
