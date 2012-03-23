@@ -45,7 +45,7 @@ function commerce_ups_build_rate_request($order) {
   }
 
   $number_of_packages = ceil($volume['volume'] / $default_package_volume);
-  
+
   /* Pickup Schedule */
   $schedule_code = variable_get('commerce_ups_pick_up_schedule');
 
