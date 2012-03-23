@@ -304,7 +304,7 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
     unset($form_state['input']['commerce_ups_password']);
   }
   else {
-    $form_state['input']['commerce_ups_password']= commerce_ups_encrypt($form_state['input']['commerce_ups_password']);
+    $form_state['input']['commerce_ups_password'] = commerce_ups_encrypt($form_state['input']['commerce_ups_password']);
   }
 
   $fields = array(
