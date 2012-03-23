@@ -260,7 +260,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#type' => 'submit',
     '#value' => t('Save configuration'),
   );
-  return $form;
+  return system_settings_form($form);
 }
 
 /* hook_settings_form_validate() */
@@ -305,36 +305,6 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
   }
   else {
     $form_state['input']['commerce_ups_password'] = commerce_ups_encrypt($form_state['input']['commerce_ups_password']);
-  }
-
-  $fields = array(
-    'commerce_ups_account_id',
-    'commerce_ups_user_id',
-    'commerce_ups_password',
-    'commerce_ups_access_key',
-    'commerce_ups_encrypt',
-    'commerce_ups_services',
-    'commerce_ups_company_name',
-    'commerce_ups_address_line_1',
-    'commerce_ups_address_line_2',
-    'commerce_ups_city',
-    'commerce_ups_state',
-    'commerce_ups_postal_code',
-    'commerce_ups_country_code',
-    'commerce_ups_packaging',
-    'commerce_ups_pick_up_schedule',
-    'commerce_ups_show_logo',
-    'commerce_ups_default_package_size_length',
-    'commerce_ups_default_package_size_width',
-    'commerce_ups_default_package_size_height',
-    'commerce_ups_shipto_residential',
-  );
-
-  foreach ($fields as $key) {
-    if (array_key_exists($key, $form_state['input'])) {
-      $value = $form_state['input'][$key];
-      variable_set($key, $value);
-    }
   }
 
   drupal_set_message(t('The UPS configuration options have been saved.'));
