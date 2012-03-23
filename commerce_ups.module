@@ -230,13 +230,13 @@ function commerce_ups_encryption_available($options = array()) {
 
   if ($display_errors || $display_all) {
     foreach ($errors as $msg) {
-      drupal_set_message(filter_xss(t($msg)), 'error');
+      drupal_set_message(filter_xss(t($msg)), 'error', FALSE);
     }
   }
 
   if ($display_warnings || $display_all) {
     foreach ($warnings as $msg) {
-      drupal_set_message(filter_xss(t($msg)), 'warning');
+      drupal_set_message(filter_xss(t($msg)), 'warning', FALSE);
     }
   }
 
