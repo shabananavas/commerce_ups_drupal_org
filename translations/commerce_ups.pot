@@ -61,7 +61,7 @@ msgid "Encrypt UPS credentials (HIGHLY RECOMMENDED)"
 msgstr ""
 
 #: commerce_ups.admin.inc:61
-msgid "Note: enabling this setting will not encrypt existing credentials."
+msgid "Note: Enabling this setting automatically will encrypt your password even though you cannot see it. Disabling this checkbox requires that you re-enter a password."
 msgstr ""
 
 #: commerce_ups.admin.inc:66
@@ -372,4 +372,8 @@ msgstr ""
 
 #: commerce_ups.xml.inc:134
 msgid "Submitting API request to the UPS"
+msgstr ""
+
+#: commerce_ups.admin.inc:275
+msgid "You must enter in a password to turn off encryption."
 msgstr ""

@@ -190,17 +190,33 @@ function commerce_ups_commerce_shipping_service_name($service_code) {
 }
 
 /**
- * Decrypt a specified value.
- */
-function commerce_ups_decrypt($value) {
-  return aes_decrypt($value);
-}
-
-/**
  * Encrypt a specified value.
  */
 function commerce_ups_encrypt($value) {
   return aes_encrypt($value);
+}
+
+/**
+ * Decrypt all api variables in one function call. 
+ */
+function commerce_ups_decrypt_vars($include_password) {
+  $user_vars = array();
+  $encrypted = variable_get('commerce_ups_encrypt', FALSE) && function_exists('aes_decrypt');
+  $user_vars['ups_accountid'] = variable_get('commerce_ups_account_id', '');
+  $user_vars['ups_userid'] = variable_get('commerce_ups_user_id', '');
+  $user_vars['ups_accesskey'] = variable_get('commerce_ups_access_key', '');
+  if ($include_password) {
+    $user_vars['ups_password'] = variable_get('commerce_ups_password', '');
+  }
+  if ($encrypted) {
+    $user_vars['ups_accountid'] = aes_decrypt($user_vars['ups_accountid']);
+    $user_vars['ups_userid'] = aes_decrypt($user_vars['ups_userid']);
+    $user_vars['ups_accesskey'] = aes_decrypt($user_vars['ups_accesskey']);
+    if ($include_password) {
+      $user_vars['ups_password'] = aes_decrypt($user_vars['ups_password']);
+    }
+  }
+  return $user_vars;
 }
 
 /**

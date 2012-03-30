@@ -56,16 +56,12 @@ function commerce_ups_build_rate_request($order) {
     $shipping_address = $order_wrapper->commerce_customer_shipping->commerce_customer_address->value();
   }
 
-  $encrypted = variable_get('commerce_ups_encrypt', FALSE);
-  $ups_accountid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_account_id', '')) : variable_get('commerce_ups_account_id', '');
-  $ups_userid = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_user_id', '')) : variable_get('commerce_ups_user_id', '');
-  $ups_password = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_password', '')) : variable_get('commerce_ups_password', '');
-  $ups_accesskey = $encrypted ? commerce_ups_decrypt(variable_get('commerce_ups_access_key', '')) : variable_get('commerce_ups_access_key', '');
+  $api_vars = commerce_ups_decrypt_vars(TRUE);
 
   $access_request = new SimpleXMLElement('<AccessRequest/>');
-  $access_request->addChild('AccessLicenseNumber', $ups_accesskey);
-  $access_request->addChild('UserId', $ups_userid);
-  $access_request->addChild('Password', $ups_password);
+  $access_request->addChild('AccessLicenseNumber', $api_vars['ups_accesskey']);
+  $access_request->addChild('UserId', $api_vars['ups_userid']);
+  $access_request->addChild('Password', $api_vars['ups_password']);
 
   $rating_request = new SimpleXMLElement('<RatingServiceSelectionRequest/>');
 
@@ -83,7 +79,7 @@ function commerce_ups_build_rate_request($order) {
   $shipper_address = $shipper->addChild('Address');
   $shipper_address->addChild('PostalCode', variable_get('commerce_ups_postal_code', ''));
   $shipper_address->addChild('CountryCode', variable_get('commerce_ups_country_code', ''));
-  $shipper->addChild('ShipperNumber', $ups_accountid);
+  $shipper->addChild('ShipperNumber', $api_vars['ups_accountid']);
 
   $shipto = $shipment->addChild('ShipTo');
   $shipto_address = $shipto->addChild('Address');
