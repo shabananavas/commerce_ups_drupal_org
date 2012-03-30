@@ -59,7 +59,7 @@ function commerce_ups_settings_form($form, &$form_state) {
       '#type' => 'checkbox',
       '#title' => t('Encrypt UPS credentials (HIGHLY RECOMMENDED)'),
       '#description' => t('Note: enabling this setting will not encrypt existing credentials.'),
-      '#default_value' => TRUE,
+      '#default_value' => $encrypted,
     );
   }
   else {
