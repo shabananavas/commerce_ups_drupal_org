@@ -165,26 +165,3 @@ function commerce_ups_api_request($xml, $message = '') {
     return FALSE;
   }
 }
-
-function _array_to_xml($student_info, &$xml_student_info) {
-  foreach ($student_info as $key => $value) {
-    if (is_array($value)) {
-      if (!is_numeric($key)) {
-        $subnode = $xml_student_info->addChild("$key");
-        _array_to_xml($value, $subnode);
-      }
-      else {
-        _array_to_xml($value, $xml_student_info);
-      }
-    }
-    else {
-      $xml_student_info->addChild("$key", "$value");
-    }
-  }
-}
-
-function _xml_to_array($xml) {
-  $str_xml = simplexml_load_string($xml);
-  $json = json_encode($str_xml);
-  return json_decode($json, TRUE);
-}
