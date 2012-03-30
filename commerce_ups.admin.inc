@@ -195,7 +195,7 @@ function commerce_ups_settings_form($form, &$form_state) {
   $form['packaging']['commerce_ups_packaging'] = array(
     '#type' => 'checkboxes',
     '#options' => _commerce_ups_packaging_types(),
-    '#default_value' => variable_get("commerce_ups_packaging", array())
+    '#default_value' => variable_get('commerce_ups_packaging', array())
   );
   */
   // Fields for default package size (inches)

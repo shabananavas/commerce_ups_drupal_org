@@ -114,10 +114,10 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
  * hook_form_alter()
  */
 function commerce_ups_form_alter(&$form, &$form_state, $form_id) {
-  if ("commerce_checkout_form_shipping" == $form_id) {
+  if ('commerce_checkout_form_shipping' == $form_id) {
     $image = drupal_get_path('module', 'commerce_ups') . '/images/ups-logo.png';
-    if (file_exists($image) && variable_get("commerce_ups_show_logo", FALSE)) {
-      $form["commerce_shipping"]["#title"] = $form["commerce_shipping"]["#title"] . theme("image", array("path" => $image));
+    if (file_exists($image) && variable_get('commerce_ups_show_logo', FALSE)) {
+      $form['commerce_shipping']['#title'] = $form['commerce_shipping']['#title'] . theme('image', array('path' => $image));
     }
   }
 }
@@ -129,24 +129,24 @@ function commerce_ups_form_alter(&$form, &$form_state, $form_id) {
 function _commerce_ups_service_list() {
   $services =  array(
     // Domestic services
-    '03' => array("title" => t('UPS Ground'), "description" => t('Ground Delivery')),
-    '01' => array("title" => t('UPS Next Day Air'), "description" => t('Next Day Air')),
-    '13' => array("title" => t('UPS Next Day Air Saver'), "description" => t('Next Day Air Saver')),
-    '14' => array("title" => t('UPS Next Day Early A.M.'), "description" => t('Next Day Early A.M.')),
-    '02' => array("title" => t('UPS 2nd Day Air'), "description" => t('2nd Day Air')),
-    '59' => array("title" => t('UPS 2nd Day Air A.M.'), "description" => t('2nd Day Air A.M.')),
-    '12' => array("title" => t('UPS 3 Day Select'), "description" => t('3 Day Select')),
+    '03' => array('title' => t('UPS Ground'), 'description' => t('Ground Delivery')),
+    '01' => array('title' => t('UPS Next Day Air'), 'description' => t('Next Day Air')),
+    '13' => array('title' => t('UPS Next Day Air Saver'), 'description' => t('Next Day Air Saver')),
+    '14' => array('title' => t('UPS Next Day Early A.M.'), 'description' => t('Next Day Early A.M.')),
+    '02' => array('title' => t('UPS 2nd Day Air'), 'description' => t('2nd Day Air')),
+    '59' => array('title' => t('UPS 2nd Day Air A.M.'), 'description' => t('2nd Day Air A.M.')),
+    '12' => array('title' => t('UPS 3 Day Select'), 'description' => t('3 Day Select')),
     // International services
-    '11' => array("title" => t('UPS Standard'), "description" => t('International Standard')),
-    '07' => array("title" => t('UPS Worldwide Express'), "description" => t('Worldwide Express')),
-    '08' => array("title" => t('UPS Worldwide Expedited'), "description" => t('Worldwide Expedited')),
-    '54' => array("title" => t('UPS Worldwide Express Plus'), "description" => t('Worldwide Express Plus')),
-    '65' => array("title" => t('UPS Worldwide Saver'), "description" => t('Worldwide Saver'))
+    '11' => array('title' => t('UPS Standard'), 'description' => t('International Standard')),
+    '07' => array('title' => t('UPS Worldwide Express'), 'description' => t('Worldwide Express')),
+    '08' => array('title' => t('UPS Worldwide Expedited'), 'description' => t('Worldwide Expedited')),
+    '54' => array('title' => t('UPS Worldwide Express Plus'), 'description' => t('Worldwide Express Plus')),
+    '65' => array('title' => t('UPS Worldwide Saver'), 'description' => t('Worldwide Saver'))
   );
 
   /* Make a unique ID to identify the service by */
   foreach ($services as $key => $service) {
-    $service['slug'] = str_replace(" ", "_", drupal_strtolower($service['title']));
+    $service['slug'] = str_replace(' ', '_', drupal_strtolower($service['title']));
     $services[$key] = $service;
   }
   return $services;
@@ -174,12 +174,12 @@ function _commerce_ups_packaging_types() {
 
 function _commerce_ups_pickup_types() {
   return array(
-    "06" => "One Time Pickup",
-    "01" => "Daily Pickup",
-    "03" => "Customer Counter",
-    "07" => "On Call Air",
-    "19" => "Letter Center",
-    "20" => "Air Service Center"
+    '06' => 'One Time Pickup',
+    '01' => 'Daily Pickup',
+    '03' => 'Customer Counter',
+    '07' => 'On Call Air',
+    '19' => 'Letter Center',
+    '20' => 'Air Service Center'
   );
 }
 
