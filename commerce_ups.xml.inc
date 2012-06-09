@@ -106,7 +106,11 @@ function commerce_ups_build_rate_request($order) {
     $dimensions->addChild('Height', variable_get('commerce_ups_default_package_size_height', '0'));
     $package_weight = $package->addChild('PackageWeight');
     $package_weight->addChild('UnitOfMeasurement')->addChild('Code', 'LBS');
-    $package_weight->addChild('Weight', $weight['weight'] / $number_of_packages);
+    /* If the weight is less than 0.1, set it to 0.1. I tried to find some "official" documentation
+     *   for this on the UPS site, but could not. I did find that other ecommerce platforms are 
+     *   using this same logic though, I think it is safe for now. mta
+     */
+    $package_weight->addChild('Weight', max(array(0.1, $weight['weight'] / $number_of_packages)));
     $package_number++;
   }
 
