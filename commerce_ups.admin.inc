@@ -185,7 +185,7 @@ function commerce_ups_settings_form($form, &$form_state) {
   );
   $form['packaging']['commerce_ups_packaging_explanation'] = array(
     '#type' => 'markup',
-    '#markup' => t('Only "Customer supplied packaging" is currently available. Please enter the default package size below.'),
+    '#markup' => t('Only "Customer supplied packaging" is currently available. Please enter the package size below.'),
   );
   $form['packaging']['commerce_ups_packaging'] = array(
     '#type' => 'hidden',
@@ -201,7 +201,7 @@ function commerce_ups_settings_form($form, &$form_state) {
   // Fields for default package size (inches)
   $form['default_package_size'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Default package size (inches)'),
+    '#title' => t('Package size (inches)'),
     '#collapsible' => FALSE,
     '#description' => 'UPS requires a package size when determining estimates.',
   );
@@ -236,7 +236,9 @@ function commerce_ups_settings_form($form, &$form_state) {
       </ul>
       This is a simple calculation that can get close to actual shipping costs. More
       complex logic involving multiple package sizes, weights, and void space can be implemented via
-      custom modules.',
+      custom modules.
+      <br/><br/>
+      UPS has a ' . l('maximum package size', 'http://www.ups.com/content/us/en/resources/prepare/oversize.html', array('attributes' => array('target' => '_blank'))) . '.',
   );
   $form['commerce_ups_pick_up_schedule'] = array(
     '#type' => 'select',
@@ -265,8 +267,26 @@ function commerce_ups_settings_form($form, &$form_state) {
  * Implements hook_form_validate().
  */
 function commerce_ups_settings_form_validate($form, &$form_state) {
-  $encrypted = variable_get('commerce_ups_encrypt', FALSE) && function_exists('aes_decrypt');
   $values = $form_state['values'];
+  
+  // Ensure the default package size is less than the maximum (http://www.ups.com/content/us/en/resources/prepare/oversize.html)
+  //  Length (longest side) <= 108 inches
+  //  Girth = 2*width + 2*height
+  //  Length + Girth <= 165 inches
+  $dimensions = array($values['commerce_ups_default_package_size_length'],
+                      $values['commerce_ups_default_package_size_width'],
+                      $values['commerce_ups_default_package_size_height']);
+  sort($dimensions);
+  list($height, $width, $length) = $dimensions;
+  $girth = 2*$width + 2*$height;
+  if ($length > 108) {
+    form_set_error('commerce_ups_default_package_size_length', t('The greatest dimension of the package size must be 108 inches or less.'));
+  }
+  if ($length + $girth > 165) {
+    form_set_error('commerce_ups_default_package_size_length', t('The girth (2*width + 2*height) of the package size must be 165 inches or less.'));
+  }
+
+  $encrypted = variable_get('commerce_ups_encrypt', FALSE) && function_exists('aes_decrypt');
 
   // If the Password field is empty, then they're not trying to update it and we should ignore it.
   if (empty($values['commerce_ups_password'])) {
@@ -276,7 +296,7 @@ function commerce_ups_settings_form_validate($form, &$form_state) {
     }
     return;
   }
-
+  
   /* If we are setting or resetting values, test the connection.
   $ups_connection = ups_api_function_here();
   if (is_good_connection($ups_connection)) {
