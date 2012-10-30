@@ -32,7 +32,10 @@ UPS credentials.
 1. Install and enable the module and all dependencies (be sure to use the 
 latest versions of everything). Add dimensions and weight fields (new field 
 types via the Commerce Physical module) to all shippable product types. 
-Populate dimensions and weight fields for all products.
+Populate dimensions AND weight fields for all products. IF YOUR PRODUCTS 
+DON'T HAVE BOTH PHYSICAL WEIGHT AND DIMENSIONS, A SHIPPING QUOTE WILL NOT BE 
+RETURNED - YOU HAVE BEEN WARNED, IF TEXT FILES HAD A <BLINK> TAG, I'D BE 
+USING IT HERE TO MAKE SURE THAT THIS IS CRYSTAL CLEAR ;)
 
 2. Configure the "Shipping service" checkout pane so that it is on the 
 "Shipping" page. The "Shipping service" checkout pane MUST be on a later page 
