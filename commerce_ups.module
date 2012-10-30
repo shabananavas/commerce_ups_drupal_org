@@ -111,17 +111,22 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
 }
 
 /**
- * hook_form_alter()
+ * Implements hook_commerce_shipping_service_rate_options_alter().
  */
-function commerce_ups_form_alter(&$form, &$form_state, $form_id) {
-  if ('commerce_checkout_form_shipping' == $form_id) {
+function commerce_ups_commerce_shipping_service_rate_options_alter(&$options, $order) {
+  // If the display UPS logo next to UPS services is enabled in settings,
+  // loop through the shipping options and add the UPS logo to UPS services.
+  if (variable_get('commerce_ups_show_logo', FALSE)) {
     $image = drupal_get_path('module', 'commerce_ups') . '/images/ups-logo.png';
-    if (file_exists($image) && variable_get('commerce_ups_show_logo', FALSE)) {
-      $form['commerce_shipping']['#title'] = $form['commerce_shipping']['#title'] . theme('image', array('path' => $image));
+    if (file_exists($image)) {
+      foreach ($options as $key => &$option) {
+        if (preg_match('/^ups_/', $key)) {
+          $option = theme('image', array('path' => $image, 'width' => '16px')) . ' ' . $option;
+        }
+      }
     }
   }
 }
-
 
 /**
  * Convenience function to get UPS codes for their services.
