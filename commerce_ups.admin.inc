@@ -191,13 +191,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#type' => 'hidden',
     '#value' => '02',
   );
-  /*
-  $form['packaging']['commerce_ups_packaging'] = array(
-    '#type' => 'checkboxes',
-    '#options' => _commerce_ups_packaging_types(),
-    '#default_value' => variable_get('commerce_ups_packaging', array())
-  );
-  */
+
   // Fields for default package size (inches)
   $form['default_package_size'] = array(
     '#type' => 'fieldset',
@@ -240,23 +234,30 @@ function commerce_ups_settings_form($form, &$form_state) {
       <br/><br/>
       UPS has a ' . l('maximum package size', 'http://www.ups.com/content/us/en/resources/prepare/oversize.html', array('attributes' => array('target' => '_blank'))) . '.',
   );
-  $form['commerce_ups_pick_up_schedule'] = array(
+  
+  $form['advanced_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Advanced settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['advanced_options']['commerce_ups_pick_up_schedule'] = array(
     '#type' => 'select',
     '#title' => t('Pick-up Schedule'),
     '#options' => _commerce_ups_pickup_types(),
     '#default_value' => variable_get('commerce_ups_pick_up_schedule')
   );
-  $form['commerce_ups_shipto_residential'] = array(
+  $form['advanced_options']['commerce_ups_shipto_residential'] = array(
     '#type' => 'checkbox',
     '#title' => t('Calculate ALL ship to addresses as residential.'),
     '#default_value' => variable_get('commerce_ups_shipto_residential', 0),
   );
-  $form['commerce_ups_show_logo'] = array(
+  $form['advanced_options']['commerce_ups_show_logo'] = array(
     '#type' => 'checkbox',
     '#title' => t('Show UPS Logo on Shipping Page'),
     '#default_value' => variable_get('commerce_ups_show_logo', 0),
   );
-  $form['commerce_ups_log'] = array(
+  $form['advanced_options']['commerce_ups_log'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Log the following messages for debugging'),
     '#options' => array(
