@@ -375,11 +375,20 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
     'commerce_ups_log',
   );
 
+  $services = variable_get('commerce_ups_services', NULL);
   foreach ($fields as $key) {
     if (array_key_exists($key, $form_state['input'])) {
       $value = $form_state['input'][$key];
       variable_set($key, $value);
     }
+  }
+  
+  // If the selected services have changed then rebuild caches.
+  if ($services !== $form_state['values']['commerce_ups_services']) {
+    commerce_shipping_services_reset();
+    entity_defaults_rebuild();
+    rules_clear_cache(TRUE);
+    menu_rebuild();
   }
 
   drupal_set_message(t('The UPS configuration options have been saved.'));
