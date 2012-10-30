@@ -256,6 +256,15 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#title' => t('Show UPS Logo on Shipping Page'),
     '#default_value' => variable_get('commerce_ups_show_logo', 0),
   );
+  $form['commerce_ups_log'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Log the following messages for debugging'),
+    '#options' => array(
+      'request' => t('API request messages'),
+      'response' => t('API response messages'),
+    ),
+    '#default_value' => variable_get('commerce_ups_log', array()),
+  );
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save configuration'),
@@ -362,6 +371,7 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
     'commerce_ups_default_package_size_width',
     'commerce_ups_default_package_size_height',
     'commerce_ups_shipto_residential',
+    'commerce_ups_log',
   );
 
   foreach ($fields as $key) {
