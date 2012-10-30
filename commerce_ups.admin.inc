@@ -50,7 +50,7 @@ function commerce_ups_settings_form($form, &$form_state) {
       '#title' => FALSE,
     ),
   );
-  if (commerce_ups_encryption_available(array('display_all' => TRUE))) {
+  if (commerce_ups_encryption_available()) {
     $form['api']['encryption']['status']['#markup'] =
       'Encryption is available and configured properly.';
     $form['api']['encryption']['commerce_ups_encrypt'] = array(
