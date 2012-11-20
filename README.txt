@@ -17,7 +17,7 @@ of each product. This information is necessary to determine a shipping estimate.
 * Commerce Shipping - http://www.drupal.org/project/commerce_shipping
 This provides the infrastructure for Commerce UPS to fully integrate with the 
 Commerce module.
-!!You must use the commerce_shiping 2.x branch dated on or after 2011-Dec-28!!
+You must use the commerce_shiping 2.x!
 
 
 - - - - - Optional modules
