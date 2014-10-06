@@ -122,7 +122,7 @@ function commerce_ups_settings_form($form, &$form_state) {
       'MN' => t('Minnesota'),
       'MS' => t('Mississippi'),
       'MO' => t('Missouri'),
-      'MY' => t('Montana'),
+      'MT' => t('Montana'),
       'NE' => t('Nebraska'),
       'NV' => t('Nevada'),
       'NH' => t('New Hampshire'),
