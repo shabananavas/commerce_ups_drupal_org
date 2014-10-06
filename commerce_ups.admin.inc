@@ -284,7 +284,7 @@ function commerce_ups_settings_form($form, &$form_state) {
  */
 function commerce_ups_settings_form_validate($form, &$form_state) {
   $values = $form_state['values'];
-  
+
   // Ensure the default package size is less than the maximum (http://www.ups.com/content/us/en/resources/prepare/oversize.html)
   //  Length (longest side) <= 108 inches
   //  Girth = 2*width + 2*height
@@ -307,12 +307,12 @@ function commerce_ups_settings_form_validate($form, &$form_state) {
   // If the Password field is empty, then they're not trying to update it and we should ignore it.
   if (empty($values['commerce_ups_password'])) {
     unset($form_state['values']['commerce_ups_password']);
-    if ($encrypted && empty($form_state['input']['commerce_ups_password'])) {
+    if ($encrypted && empty($form_state['input']['commerce_ups_encrypt'])) {
       form_set_error('commerce_ups_password', t('You must enter in a password to turn off encryption.'));
     }
     return;
   }
-  
+
   /* If we are setting or resetting values, test the connection.
   $ups_connection = ups_api_function_here();
   if (is_good_connection($ups_connection)) {
