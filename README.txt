@@ -26,7 +26,6 @@ You must use the commerce_shiping 2.x!
 This module is strongly suggested in order to securely store the site's 
 UPS credentials. 
 
-
 - - - - - Installation
 
 1. Install and enable the module and all dependencies (be sure to use the 
@@ -74,7 +73,10 @@ lead that weighs 600lbs, this module will let you (instead of breaking the
 order into more packages).
 
 6. Doesn't account for packing material. If you need to account for packing 
-material, then you may want to adjust product dimensions accordingly.
+material, then you may want to adjust product dimensions accordingly.  
+
+7. Doesn't include support for shipping markups. If you'd like to add a shipping 
+markup, use Rules Components.
 
 
 - - - - - Methodology
