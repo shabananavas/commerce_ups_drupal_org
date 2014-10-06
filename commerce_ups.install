@@ -32,6 +32,7 @@ function commerce_ups_uninstall() {
     'commerce_ups_rates_timeout',
     'commerce_ups_shipto_residential',
     'commerce_ups_log',
+    'commerce_ups_negotiated_rates',
   );
 
   foreach ($fields as $data) {

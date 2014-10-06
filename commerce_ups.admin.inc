@@ -266,6 +266,12 @@ function commerce_ups_settings_form($form, &$form_state) {
     ),
     '#default_value' => variable_get('commerce_ups_log', array()),
   );
+  $form['advanced_options']['commerce_ups_negotiated_rates'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use negotiated rates'),
+    '#description' => t('(only use if your account is setup for negotiated rates)'),
+    '#default_value' => variable_get('commerce_ups_negotiated_rates', 0),
+  );
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save configuration'),
@@ -373,6 +379,7 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
     'commerce_ups_default_package_size_height',
     'commerce_ups_shipto_residential',
     'commerce_ups_log',
+    'commerce_ups_negotiated_rates',
   );
 
   $services = variable_get('commerce_ups_services', NULL);

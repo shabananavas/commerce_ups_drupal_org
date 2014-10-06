@@ -90,8 +90,14 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
         foreach ($response->RatedShipment as $rate) {
           // Extract the service name and price information from the rate object.
           $service_name = commerce_ups_commerce_shipping_service_name((string) $rate->Service->Code);
-          $decimal = (string) $rate->TotalCharges->MonetaryValue;
-          $currency_code = (string) $rate->TotalCharges->CurrencyCode;
+          if ($rate->NegotiatedRates) {
+            $decimal = (string) $rate->NegotiatedRates->NetSummaryCharges->GrandTotal->MonetaryValue;
+            $currency_code = (string) $rate->NegotiatedRates->NetSummaryCharges->GrandTotal->CurrencyCode;
+          }
+          else {
+            $decimal = (string) $rate->TotalCharges->MonetaryValue;
+            $currency_code = (string) $rate->TotalCharges->CurrencyCode;
+          }
 
           // Add an item to the rates array for the current service.
           $rates[$service_name] = array(

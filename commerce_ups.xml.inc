@@ -75,6 +75,11 @@ function commerce_ups_build_rate_request($order) {
 
   $shipment = $rating_request->addChild('Shipment');
 
+  if (variable_get('commerce_ups_negotiated_rates', FALSE)) {
+    $rate_information = $shipment->addChild('RateInformation');
+    $rate_information->addChild('NegotiatedRatesIndicator');
+  }
+
   $shipper = $shipment->addChild('Shipper');
   $shipper_address = $shipper->addChild('Address');
   $shipper_address->addChild('PostalCode', variable_get('commerce_ups_postal_code', ''));
