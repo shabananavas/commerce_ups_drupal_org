@@ -83,7 +83,7 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
     // If we got a valid rate request object back...
     if ($rate_request_xml) {
       // Submit the API request to UPS.
-      $response = commerce_ups_api_request($rate_request_xml, t('Requesting shipping rates for Order @order_number', array('@order_number' => $order->order_number)));
+      $response = commerce_ups_api_request('Rate', $rate_request_xml, t('Requesting shipping rates for Order @order_number', array('@order_number' => $order->order_number)));
 
       if (!empty($response)) {
         // Parse the response to cache all requested rates for the current order.
@@ -208,7 +208,7 @@ function commerce_ups_encrypt($value) {
 }
 
 /**
- * Decrypt all api variables in one function call. 
+ * Decrypt all api variables in one function call.
  */
 function commerce_ups_decrypt_vars($include_password) {
   $user_vars = array();
@@ -277,4 +277,22 @@ function commerce_ups_encryption_available($options = array()) {
       return TRUE;
     }
   }
+}
+
+/**
+ * Defines the available endpoints for the UPS XML API.
+ */
+function commerce_ups_api_endpoint($method) {
+  $endpoints = array(
+    'Rate' => 'https://www.ups.com/ups.app/xml/Rate'
+  );
+
+  // Allow other modules to alter the API endpoints.
+  drupal_alter('commerce_ups_api_endpoint', $endpoints, $method);
+
+  if (!empty($endpoints[$method])) {
+    return $endpoints[$method];
+  }
+
+  return FALSE;
 }

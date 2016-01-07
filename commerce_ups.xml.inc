@@ -5,12 +5,31 @@
  * Handles XML-related stuff for Commerce UPS module.
  */
 
+/**
+ * Builds the XML access request.
+ */
+function commerce_ups_build_access_request($order) {
+  $api_vars = commerce_ups_decrypt_vars(TRUE);
+
+  $access_request = new SimpleXMLElement('<AccessRequest/>');
+  $access_request->addChild('AccessLicenseNumber', $api_vars['ups_accesskey']);
+  $access_request->addChild('UserId', $api_vars['ups_userid']);
+  $access_request->addChild('Password', $api_vars['ups_password']);
+
+  // Allow other modules to alter the access request.
+  drupal_alter('commerce_ups_build_access_request', $access_request, $order);
+
+  return $access_request->asXML();
+}
+
 /*
  * This builds the XML to submit to UPS for rates.
  *
  * Here's a decent sample of what the resulting XML should look like: http://sameers.me/2011/01/21/ups-rate-request-sample/
  */
 function commerce_ups_build_rate_request($order) {
+  $api_vars = commerce_ups_decrypt_vars(TRUE);
+
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
 
   // Determine the shipping profile reference field name for the order.
@@ -55,13 +74,6 @@ function commerce_ups_build_rate_request($order) {
   if (!empty($order_wrapper->commerce_customer_shipping->commerce_customer_address)) {
     $shipping_address = $order_wrapper->commerce_customer_shipping->commerce_customer_address->value();
   }
-
-  $api_vars = commerce_ups_decrypt_vars(TRUE);
-
-  $access_request = new SimpleXMLElement('<AccessRequest/>');
-  $access_request->addChild('AccessLicenseNumber', $api_vars['ups_accesskey']);
-  $access_request->addChild('UserId', $api_vars['ups_userid']);
-  $access_request->addChild('Password', $api_vars['ups_password']);
 
   $rating_request = new SimpleXMLElement('<RatingServiceSelectionRequest/>');
 
@@ -114,27 +126,33 @@ function commerce_ups_build_rate_request($order) {
     $package_weight = $package->addChild('PackageWeight');
     $package_weight->addChild('UnitOfMeasurement')->addChild('Code', 'LBS');
     /* If the weight is less than 0.1, set it to 0.1. I tried to find some "official" documentation
-     *   for this on the UPS site, but could not. I did find that other ecommerce platforms are 
+     *   for this on the UPS site, but could not. I did find that other ecommerce platforms are
      *   using this same logic though, I think it is safe for now. mta
      */
     $package_weight->addChild('Weight', max(array(0.1, $weight['weight'] / $number_of_packages)));
     $package_number++;
   }
 
-  $rating_request .= $rating_request->asXML();
-  $xml = $access_request->asXML() . $rating_request;
+  // Allow other modules to alter the rate request.
+  drupal_alter('commerce_ups_build_rate_request', $rating_request, $order);
+
+  // Prepend the access request XML.
+  $xml = commerce_ups_build_access_request($order) . $rating_request->asXML();
+
   return $xml;
 }
 
 /**
  * Submits an API request to the Progistics XML Processor.
  *
+ * @param  $method
+ *   A string value of the API method that is used to look up the endpoint.
  * @param $xml
  *   An XML string to submit to the Progistics XML Processor.
  * @param $message
  *   Optional log message to use for logged API requests.
  */
-function commerce_ups_api_request($xml, $message = '') {
+function commerce_ups_api_request($method, $xml, $message = '') {
   // Log the API request if specified.
   if (in_array('request', variable_get('commerce_ups_log', array()))) {
     if (empty($message)) {
@@ -143,7 +161,16 @@ function commerce_ups_api_request($xml, $message = '') {
     watchdog('ups', '@message:<pre>@xml</pre>', array('@message' => $message, '@xml' => $xml));
   }
 
-  $ch = curl_init('https://www.ups.com/ups.app/xml/Rate');
+  // Determine the API endpoint for the method.
+  $endpoint = commerce_ups_api_endpoint($method);
+
+  // A valid endpoint is required to continue.
+  if (empty($endpoint)) {
+    watchdog('ups', 'Undefined endpoint for : @method', array('@method' => $method), WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  $ch = curl_init($endpoint);
   curl_setopt($ch, CURLOPT_HEADER, 0);
   curl_setopt($ch, CURLOPT_POST, 1);
   curl_setopt($ch, CURLOPT_TIMEOUT, 60);
@@ -163,8 +190,14 @@ function commerce_ups_api_request($xml, $message = '') {
 
   // If we received data back from the server...
   if (!empty($result)) {
+
     // Extract the result into an XML response object.
-    $response = new SimpleXMLElement($result);
+    try {
+      $response = new SimpleXMLElement($result);
+    } catch (Exception $ex) {
+      watchdog('ups', 'Unable to parse response from UPS as XML: Response <pre>@response</pre>', array('@response' => print_r($result, TRUE)), WATCHDOG_WARNING);
+      return FALSE;
+    }
 
     // Log the API request if specified.
     if (in_array('response', variable_get('commerce_ups_log', array()))) {
