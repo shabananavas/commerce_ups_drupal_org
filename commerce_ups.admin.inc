@@ -5,7 +5,9 @@
  * Handles admin settings page for Commerce UPS module.
  */
 
-/* hook_settings_form() */
+/**
+ * Implements hook_settings_form().
+ */
 function commerce_ups_settings_form($form, &$form_state) {
   $ups_link = l(t('UPS.com'), 'https://www.ups.com/upsdeveloperkit', array('attributes' => array('target' => '_blank')));
   $form['api'] = array(
@@ -51,8 +53,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     ),
   );
   if (commerce_ups_encryption_available()) {
-    $form['api']['encryption']['status']['#markup'] =
-      'Encryption is available and configured properly.';
+    $form['api']['encryption']['status']['#markup'] = 'Encryption is available and configured properly.';
     $form['api']['encryption']['commerce_ups_encrypt'] = array(
       '#type' => 'checkbox',
       '#title' => t('Encrypt UPS credentials (HIGHLY RECOMMENDED)'),
@@ -73,22 +74,22 @@ function commerce_ups_settings_form($form, &$form_state) {
   $form['origin']['commerce_ups_company_name'] = array(
     '#type' => 'textfield',
     '#title' => t('Company Name'),
-    '#default_value' => variable_get('commerce_ups_company_name')
+    '#default_value' => variable_get('commerce_ups_company_name'),
   );
   $form['origin']['commerce_ups_address_line_1'] = array(
     '#type' => 'textfield',
     '#title' => t('Address'),
-    '#default_value' => variable_get('commerce_ups_address_line_1')
+    '#default_value' => variable_get('commerce_ups_address_line_1'),
   );
   $form['origin']['commerce_ups_address_line_2'] = array(
     '#type' => 'textfield',
     '#title' => t('Address (Additional)'),
-    '#default_value' => variable_get('commerce_ups_address_line_2')
+    '#default_value' => variable_get('commerce_ups_address_line_2'),
   );
   $form['origin']['commerce_ups_city'] = array(
     '#type' => 'textfield',
     '#title' => t('City'),
-    '#default_value' => variable_get('commerce_ups_city')
+    '#default_value' => variable_get('commerce_ups_city'),
   );
   $form['origin']['commerce_ups_state'] = array(
     '#type' => 'select',
@@ -147,13 +148,13 @@ function commerce_ups_settings_form($form, &$form_state) {
       'WV' => t('West Virginia'),
       'WI' => t('Wisconsin'),
       'WY' => t('Wyoming'),
-    )
+    ),
   );
   $form['origin']['commerce_ups_postal_code'] = array(
     '#type' => 'textfield',
     '#title' => t('Postal Code'),
     '#size' => 5,
-    '#default_value' => variable_get('commerce_ups_postal_code')
+    '#default_value' => variable_get('commerce_ups_postal_code'),
   );
   $form['origin']['commerce_ups_country_code'] = array(
     '#type' => 'select',
@@ -162,7 +163,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#options' => array(
       '' => t('Please Select'),
       'US' => t('United States of America'),
-    )
+    ),
   );
   $form['services'] = array(
     '#type' => 'fieldset',
@@ -176,7 +177,7 @@ function commerce_ups_settings_form($form, &$form_state) {
   $form['services']['commerce_ups_services'] = array(
     '#type' => 'checkboxes',
     '#options' => $array_options,
-    '#default_value' => variable_get('commerce_ups_services', array())
+    '#default_value' => variable_get('commerce_ups_services', array()),
   );
   $form['packaging'] = array(
     '#type' => 'fieldset',
@@ -192,7 +193,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#value' => '02',
   );
 
-  // Fields for default package size (inches)
+  // Fields for default package size (inches).
   $form['default_package_size'] = array(
     '#type' => 'fieldset',
     '#title' => t('Package size (inches)'),
@@ -234,7 +235,7 @@ function commerce_ups_settings_form($form, &$form_state) {
       <br/><br/>
       UPS has a ' . l('maximum package size', 'http://www.ups.com/content/us/en/resources/prepare/oversize.html', array('attributes' => array('target' => '_blank'))) . '.',
   );
-  
+
   $form['advanced_options'] = array(
     '#type' => 'fieldset',
     '#title' => t('Advanced settings'),
@@ -245,7 +246,7 @@ function commerce_ups_settings_form($form, &$form_state) {
     '#type' => 'select',
     '#title' => t('Pick-up Schedule'),
     '#options' => _commerce_ups_pickup_types(),
-    '#default_value' => variable_get('commerce_ups_pick_up_schedule')
+    '#default_value' => variable_get('commerce_ups_pick_up_schedule'),
   );
   $form['advanced_options']['commerce_ups_shipto_residential'] = array(
     '#type' => 'checkbox',
@@ -279,22 +280,24 @@ function commerce_ups_settings_form($form, &$form_state) {
   return $form;
 }
 
-/*
+/**
  * Implements hook_form_validate().
  */
 function commerce_ups_settings_form_validate($form, &$form_state) {
   $values = $form_state['values'];
 
-  // Ensure the default package size is less than the maximum (http://www.ups.com/content/us/en/resources/prepare/oversize.html)
+  // Ensure the default package size is less than the maximum
+  // (http://www.ups.com/content/us/en/resources/prepare/oversize.html)
   //  Length (longest side) <= 108 inches
   //  Girth = 2*width + 2*height
-  //  Length + Girth <= 165 inches
+  //  Length + Girth <= 165 inches.
   $dimensions = array($values['commerce_ups_default_package_size_length'],
-                      $values['commerce_ups_default_package_size_width'],
-                      $values['commerce_ups_default_package_size_height']);
+    $values['commerce_ups_default_package_size_width'],
+    $values['commerce_ups_default_package_size_height'],
+  );
   sort($dimensions);
   list($height, $width, $length) = $dimensions;
-  $girth = 2*$width + 2*$height;
+  $girth = 2 * $width + 2 * $height;
   if ($length > 108) {
     form_set_error('commerce_ups_default_package_size_length', t('The greatest dimension of the package size must be 108 inches or less.'));
   }
@@ -319,22 +322,21 @@ function commerce_ups_settings_form_validate($form, &$form_state) {
     drupal_set_message(t('Connection established. UPS credentials updated.'));
   }
   else {
-    drupal_set_message(
-      t('Resetting UPS credentials failed.'), 'error');
+    drupal_set_message(t('Resetting UPS credentials failed.'), 'error');
     form_set_error('commerce_ups_account_id', t('Unable to connect to UPS. Please check your credentials.'));
     form_set_error('commerce_ups_user_id');
     form_set_error('commerce_ups_access_key');
     form_set_error('commerce_ups_password');
   }
-  */
+   */
 }
 
-/*
+/**
  * Implements hook_form_submit().
  */
 function commerce_ups_settings_form_submit($form, &$form_state) {
   $encrypted = variable_get('commerce_ups_encrypt', FALSE) && function_exists('aes_decrypt');
-  // Encrypt the UPS API credentials if available
+  // Encrypt the UPS API credentials if available.
   if (isset($form_state['input']['commerce_ups_encrypt']) && $form_state['input']['commerce_ups_encrypt']) {
     $form_state['input']['commerce_ups_user_id'] = commerce_ups_encrypt($form_state['input']['commerce_ups_user_id']);
     $form_state['input']['commerce_ups_account_id'] = commerce_ups_encrypt($form_state['input']['commerce_ups_account_id']);
@@ -343,8 +345,9 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
       $form_state['input']['commerce_ups_password'] = commerce_ups_encrypt($form_state['input']['commerce_ups_password']);
     }
     elseif ($encrypted == FALSE) {
-      // This is an odd case, if encryption is turned on but the password is already in the db
-      // Then we need to pull it from the db, not from the field
+      // This is an odd case, if encryption is turned on but the password is
+      // already in the db then we need to pull it from the db, not from the
+      // field.
       $form_state['input']['commerce_ups_password'] = commerce_ups_encrypt(variable_get('commerce_ups_password', ''));
     }
   }
@@ -389,7 +392,7 @@ function commerce_ups_settings_form_submit($form, &$form_state) {
       variable_set($key, $value);
     }
   }
-  
+
   // If the selected services have changed then rebuild caches.
   if ($services !== $form_state['values']['commerce_ups_services']) {
     commerce_shipping_services_reset();

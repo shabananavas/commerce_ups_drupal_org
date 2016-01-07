@@ -6,7 +6,9 @@
  */
 
 require 'commerce_ups.xml.inc';
-
+/**
+ * Implements hook_menu().
+ */
 function commerce_ups_menu() {
   $items = array();
 
@@ -49,7 +51,8 @@ function commerce_ups_commerce_shipping_service_info() {
   $selected_services = variable_get('commerce_ups_services', array());
 
   foreach ($selected_services as $id => $val) {
-    if ($val != 0) { // if you find a selected one...
+    // If you find a selected one...
+    if ($val != 0) {
       $service = $available_services[$id];
       $shipping_services[$service['slug']] = array(
         'title' => t($service['title']),
@@ -59,7 +62,7 @@ function commerce_ups_commerce_shipping_service_info() {
         'price_component' => 'shipping',
         'callbacks' => array(
           'rate' => 'commerce_ups_service_rate_order',
-        )
+        ),
       );
     }
   }
@@ -119,7 +122,7 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
 /**
  * Implements hook_commerce_shipping_service_rate_options_alter().
  */
-function commerce_ups_commerce_shipping_service_rate_options_alter(&$options, $order) {
+function commerce_ups_commerce_shipping_service_rate_options_alter(& $options, $order) {
   // If the display UPS logo next to UPS services is enabled in settings,
   // loop through the shipping options and add the UPS logo to UPS services.
   if (variable_get('commerce_ups_show_logo', FALSE)) {
@@ -138,7 +141,7 @@ function commerce_ups_commerce_shipping_service_rate_options_alter(&$options, $o
  * Convenience function to get UPS codes for their services.
  */
 function _commerce_ups_service_list() {
-  $services =  array(
+  $services = array(
     // Domestic services
     '03' => array('title' => t('UPS Ground'), 'description' => t('Ground Delivery')),
     '01' => array('title' => t('UPS Next Day Air'), 'description' => t('Next Day Air')),
@@ -152,10 +155,10 @@ function _commerce_ups_service_list() {
     '07' => array('title' => t('UPS Worldwide Express'), 'description' => t('Worldwide Express')),
     '08' => array('title' => t('UPS Worldwide Expedited'), 'description' => t('Worldwide Expedited')),
     '54' => array('title' => t('UPS Worldwide Express Plus'), 'description' => t('Worldwide Express Plus')),
-    '65' => array('title' => t('UPS Worldwide Saver'), 'description' => t('Worldwide Saver'))
+    '65' => array('title' => t('UPS Worldwide Saver'), 'description' => t('Worldwide Saver')),
   );
 
-  /* Make a unique ID to identify the service by */
+  // Make a unique ID to identify the service by.
   foreach ($services as $key => $service) {
     $service['slug'] = str_replace(' ', '_', drupal_strtolower($service['title']));
     $services[$key] = $service;
@@ -168,7 +171,7 @@ function _commerce_ups_service_list() {
  */
 function _commerce_ups_packaging_types() {
   return array(
-    // Customer Supplied Page is first so it will be the default
+    // Customer Supplied Page is first so it will be the default.
     '02' => t('Customer Supplied Package'),
     '01' => t('UPS Letter'),
     '03' => t('Tube'),
@@ -183,6 +186,9 @@ function _commerce_ups_packaging_types() {
   );
 }
 
+/**
+ * Types of pickup for UPS.
+ */
 function _commerce_ups_pickup_types() {
   return array(
     '06' => 'One Time Pickup',
@@ -190,11 +196,13 @@ function _commerce_ups_pickup_types() {
     '03' => 'Customer Counter',
     '07' => 'On Call Air',
     '19' => 'Letter Center',
-    '20' => 'Air Service Center'
+    '20' => 'Air Service Center',
   );
 }
 
-
+/**
+ * List of Shipping Service.
+ */
 function commerce_ups_commerce_shipping_service_name($service_code) {
   $service_names = _commerce_ups_service_list();
   return $service_names[$service_code]['slug'];
@@ -272,10 +280,10 @@ function commerce_ups_encryption_available($options = array()) {
       if (empty($errors)) {
         return TRUE;
       }
-  case 'warnings':
-    if (empty($errors) && empty($warnings)) {
-      return TRUE;
-    }
+    case 'warnings':
+      if (empty($errors) && empty($warnings)) {
+        return TRUE;
+      }
   }
 }
 

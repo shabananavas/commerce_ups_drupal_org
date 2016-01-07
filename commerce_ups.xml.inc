@@ -22,7 +22,7 @@ function commerce_ups_build_access_request($order) {
   return $access_request->asXML();
 }
 
-/*
+/**
  * This builds the XML to submit to UPS for rates.
  *
  * Here's a decent sample of what the resulting XML should look like: http://sameers.me/2011/01/21/ups-rate-request-sample/
@@ -48,12 +48,14 @@ function commerce_ups_build_rate_request($order) {
 
   $ups_pickupschedule = variable_get('commerce_ups_pick_up_schedule');
 
-  $weight = commerce_physical_order_weight($order, 'lb');  // this returns $weight['unit'] and $weight['weight']
-  $volume = commerce_physical_order_volume($order, 'in');  // this returns $volume['unit'] and $weight['volume']
-
+  // This returns $weight['unit'] and $weight['weight'].
+  $weight = commerce_physical_order_weight($order, 'lb');
+  // This returns $volume['unit'] and $weight['volume'].
+  $volume = commerce_physical_order_volume($order, 'in');
   $default_package_volume = variable_get('commerce_ups_default_package_size_length', '0') * variable_get('commerce_ups_default_package_size_width', '0') * variable_get('commerce_ups_default_package_size_height', '0');
 
   /* If there is no default package volume, we cannot calculate the number of packages and there is no reason to send to UPS */
+
   if ($default_package_volume == 0) {
     drupal_set_message(t('There was an error with the UPS configuration.'), 'error', FALSE);
     watchdog('commerce_ups', 'The default measurements for the commerce_ups module is empty or is set to zero. Please set the default package dimensions in the settings page for the commerce_ups module. Without the default measurements this module cannot calculate the number of packages and UPS rates will not be displayed.', array(), WATCHDOG_ALERT);
@@ -61,6 +63,7 @@ function commerce_ups_build_rate_request($order) {
   }
 
   /* If there is no total volume or weight for the order, there is no reason to send the request to UPS */
+
   if ($volume['volume'] == NULL || $weight['weight'] == NULL) {
     return FALSE;
   }
@@ -68,9 +71,11 @@ function commerce_ups_build_rate_request($order) {
   $number_of_packages = ceil($volume['volume'] / $default_package_volume);
 
   /* Pickup Schedule */
+
   $schedule_code = variable_get('commerce_ups_pick_up_schedule');
 
   /* Ship To - Customer Shipping Address */
+
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
   // Prepare the shipping address for use in the request.
   if (!empty($order_wrapper->commerce_customer_shipping->commerce_customer_address)) {
@@ -147,7 +152,7 @@ function commerce_ups_build_rate_request($order) {
 /**
  * Submits an API request to the Progistics XML Processor.
  *
- * @param  $method
+ * @param $method
  *   A string value of the API method that is used to look up the endpoint.
  * @param $xml
  *   An XML string to submit to the Progistics XML Processor.
@@ -196,7 +201,8 @@ function commerce_ups_api_request($method, $xml, $message = '') {
     // Extract the result into an XML response object.
     try {
       $response = new SimpleXMLElement($result);
-    } catch (Exception $ex) {
+    }
+    catch (Exception $ex) {
       watchdog('ups', 'Unable to parse response from UPS as XML: Response <pre>@response</pre>', array('@response' => print_r($result, TRUE)), WATCHDOG_WARNING);
       return FALSE;
     }

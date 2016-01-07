@@ -1,8 +1,13 @@
 <?php
 
 /**
-* Administration tests for my module.
-*/
+ * @file
+ * This will allows me to test the commerce ups module.
+ */
+
+/**
+ * Administration tests for Commerce UPS.
+ */
 class CommerceUPSAdministrationTestCase extends CommerceBaseTestCase {
   /**
    * Order object.
@@ -32,18 +37,19 @@ class CommerceUPSAdministrationTestCase extends CommerceBaseTestCase {
     $final_permissions = array_unique(array_merge($permissions, array('administer shipping')));
     $user = $this->drupalCreateUser($final_permissions);
     $this->drupalLogin($user);
-    
+
     //$this->site_admin = $this->createSiteAdmin();
   }
 
   public function testCommerceUPSSettingsForm() {
-    // Log in as store admin.
-    //$this->drupalLogin($this->site_admin);
-    // Access to the config page for checkout forms
     $this->drupalGet('admin/commerce/config/shipping/methods/ups/edit');
-    $this->assertResponse(200,'Hit something');
+    $this->assertResponse(200, 'Hit something');
   }
 
+/**
+ * This function will generate a fake credentails in order to use the test
+ * funcionality.
+ */
   public function testCommerceUPSFieldSaves() {
     $form = array(
       'commerce_ups_account_id' => 'test',
