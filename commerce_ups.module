@@ -284,7 +284,7 @@ function commerce_ups_encryption_available($options = array()) {
  */
 function commerce_ups_api_endpoint($method) {
   $endpoints = array(
-    'Rate' => 'https://www.ups.com/ups.app/xml/Rate'
+    'Rate' => 'https://onlinetools.ups.com/ups.app/xml/Rate',
   );
 
   // Allow other modules to alter the API endpoints.
