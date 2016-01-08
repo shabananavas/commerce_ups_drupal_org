@@ -77,7 +77,7 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
   // First attempt to recover cached shipping rates for the current order.
   $rates = commerce_shipping_rates_cache_get('ups', $order, variable_get('commerce_ups_rates_timeout', 0));
   // If no rates were recovered from the cache or the cached rates are over one minute old...
-  if (!$rates) {
+  if (!is_array($rates)) {
     $rates = array();
 
     // Build the rate request for the current order. This returns XML.
