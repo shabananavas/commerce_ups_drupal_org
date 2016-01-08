@@ -5,20 +5,17 @@
  * Handles main functionality for Commerce UPS module.
  */
 
-require 'commerce_ups.xml.inc';
 /**
  * Implements hook_menu().
  */
 function commerce_ups_menu() {
-  $items = array();
-
   $items['admin/commerce/config/shipping/methods/ups/edit'] = array(
     'title' => 'Edit',
     'description' => 'Configure the UPS shipping method.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('commerce_ups_settings_form'),
     'access arguments' => array('administer shipping'),
-    'file' => 'commerce_ups.admin.inc',
+    'file' => 'includes/commerce_ups.admin.inc',
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_INLINE,
     'weight' => 0,
@@ -31,8 +28,6 @@ function commerce_ups_menu() {
  * Implements hook_commerce_shipping_method_info().
  */
 function commerce_ups_commerce_shipping_method_info() {
-  $shipping_methods = array();
-
   $shipping_methods['ups'] = array(
     'title' => t('UPS'),
     'description' => t('Quote rates from UPS'),
@@ -79,6 +74,7 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
   // If no rates were recovered from the cache or the cached rates are over one minute old...
   if (!is_array($rates)) {
     $rates = array();
+    module_load_include('inc', 'commerce_ups', 'includes/commerce_ups.xml');
 
     // Build the rate request for the current order. This returns XML.
     $rate_request_xml = commerce_ups_build_rate_request($order);
