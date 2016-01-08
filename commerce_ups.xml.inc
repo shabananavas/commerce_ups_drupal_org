@@ -12,9 +12,9 @@ function commerce_ups_build_access_request($order) {
   $api_vars = commerce_ups_decrypt_vars(TRUE);
 
   $access_request = new SimpleXMLElement('<AccessRequest/>');
-  $access_request->addChild('AccessLicenseNumber', $api_vars['ups_accesskey']);
-  $access_request->addChild('UserId', $api_vars['ups_userid']);
-  $access_request->addChild('Password', $api_vars['ups_password']);
+  $access_request->AccessLicenseNumber = $api_vars['ups_accesskey'];
+  $access_request->UserId = $api_vars['ups_userid'];
+  $access_request->Password = $api_vars['ups_password'];
 
   // Allow other modules to alter the access request.
   drupal_alter('commerce_ups_build_access_request', $access_request, $order);
@@ -86,11 +86,11 @@ function commerce_ups_build_rate_request($order) {
 
   $request = $rating_request->addChild('Request');
   $transaction_reference = $request->addChild('TransactionReference');
-  $transaction_reference->addChild('CustomerContext', 'Bare Bones Rate Request');
-  $transaction_reference->addChild('XpciVersion', '1.0001');
-  $request->addChild('RequestAction', 'Rate');
-  $request->addChild('RequestOption', 'Shop');
-  $request->addChild('pickupType')->addChild('code', $schedule_code);
+  $transaction_reference->CustomerContext = 'Bare Bones Rate Request';
+  $transaction_reference->XpciVersion = '1.0001';
+  $request->RequestAction = 'Rate';
+  $request->RequestOption = 'Shop';
+  $request->pickupType->code = $schedule_code;
 
   $shipment = $rating_request->addChild('Shipment');
 
@@ -101,42 +101,42 @@ function commerce_ups_build_rate_request($order) {
 
   $shipper = $shipment->addChild('Shipper');
   $shipper_address = $shipper->addChild('Address');
-  $shipper_address->addChild('PostalCode', variable_get('commerce_ups_postal_code', ''));
-  $shipper_address->addChild('CountryCode', variable_get('commerce_ups_country_code', ''));
-  $shipper->addChild('ShipperNumber', $api_vars['ups_accountid']);
+  $shipper_address->PostalCode = variable_get('commerce_ups_postal_code', '');
+  $shipper_address->CountryCode = variable_get('commerce_ups_country_code', '');
+  $shipper->ShipperNumber = $api_vars['ups_accountid'];
 
   $shipto = $shipment->addChild('ShipTo');
   $shipto_address = $shipto->addChild('Address');
-  $shipto_address->addChild('StateProvinceCode', $shipping_address['administrative_area']);
-  $shipto_address->addChild('PostalCode', $shipping_address['postal_code']);
-  $shipto_address->addChild('CountryCode', $shipping_address['country']);
+  $shipto_address->StateProvinceCode = $shipping_address['administrative_area'];
+  $shipto_address->PostalCode = $shipping_address['postal_code'];
+  $shipto_address->CountryCode = $shipping_address['country'];
   if (variable_get('commerce_ups_shipto_residential', FALSE)) {
-    $shipto_address->addChild('ResidentialAddressIndicator', 'true');
+    $shipto_address->ResidentialAddressIndicator = 'true';
   }
 
   $shipfrom = $shipment->addChild('ShipFrom');
   $shipfrom_address = $shipfrom->addChild('Address');
-  $shipfrom_address->addChild('StateProvinceCode', variable_get('commerce_ups_state', ''));
-  $shipfrom_address->addChild('PostalCode', variable_get('commerce_ups_postal_code', ''));
-  $shipfrom_address->addChild('CountryCode', variable_get('commerce_ups_country_code', ''));
-  $shipfrom->addChild('ResidentialAddressIndicator', '');
+  $shipfrom_address->StateProvinceCode = variable_get('commerce_ups_state', '');
+  $shipfrom_address->PostalCode = variable_get('commerce_ups_postal_code', '');
+  $shipfrom_address->CountryCode = variable_get('commerce_ups_country_code', '');
+  $shipfrom->ResidentialAddressIndicator = '';
 
   $package_number = 1;
   for ($i = 1; $package_number <= $number_of_packages; $i++) {
     $package = $shipment->addChild('Package');
-    $package->addChild('PackagingType')->addChild('Code', variable_get('commerce_ups_packaging', '02'));
+    $package->PackagingType->Code = variable_get('commerce_ups_packaging', '02');
     $dimensions = $package->addChild('Dimensions');
-    $dimensions->addChild('UnitOfMeasurement')->addChild('Code', 'IN');
-    $dimensions->addChild('Length', variable_get('commerce_ups_default_package_size_length', '0'));
-    $dimensions->addChild('Width', variable_get('commerce_ups_default_package_size_width', '0'));
-    $dimensions->addChild('Height', variable_get('commerce_ups_default_package_size_height', '0'));
+    $dimensions->UnitOfMeasurement->Code = 'IN';
+    $dimensions->Length = variable_get('commerce_ups_default_package_size_length', '0');
+    $dimensions->Width = variable_get('commerce_ups_default_package_size_width', '0');
+    $dimensions->Height = variable_get('commerce_ups_default_package_size_height', '0');
     $package_weight = $package->addChild('PackageWeight');
-    $package_weight->addChild('UnitOfMeasurement')->addChild('Code', 'LBS');
+    $package_weight->UnitOfMeasurement->Code = 'LBS';
     /* If the weight is less than 0.1, set it to 0.1. I tried to find some "official" documentation
      *   for this on the UPS site, but could not. I did find that other ecommerce platforms are
      *   using this same logic though, I think it is safe for now. mta
      */
-    $package_weight->addChild('Weight', max(array(0.1, $weight['weight'] / $number_of_packages)));
+    $package_weight->Weight = max(array(0.1, $weight['weight'] / $number_of_packages));
     $package_number++;
   }
 
