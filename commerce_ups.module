@@ -111,6 +111,9 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
     }
   }
 
+  // Allow other modules to alter the returned rates
+  drupal_alter('commerce_ups_service_rate_order', $rates, $order);
+
   // Return the rate for the requested service or FALSE if not found.
   return isset($rates[$shipping_service['name']]) ? $rates[$shipping_service['name']] : FALSE;
 }
