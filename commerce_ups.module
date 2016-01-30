@@ -111,7 +111,7 @@ function commerce_ups_service_rate_order($shipping_service, $order) {
     }
   }
 
-  // Allow other modules to alter the returned rates
+  // Allow other modules to alter the returned rates.
   drupal_alter('commerce_ups_service_rate_order', $rates, $order);
 
   // Return the rate for the requested service or FALSE if not found.
@@ -141,7 +141,7 @@ function commerce_ups_commerce_shipping_service_rate_options_alter(& $options, $
  */
 function _commerce_ups_service_list() {
   $services = array(
-    // Domestic services
+    // Domestic services.
     '03' => array('title' => t('UPS Ground'), 'description' => t('Ground Delivery')),
     '01' => array('title' => t('UPS Next Day Air'), 'description' => t('Next Day Air')),
     '13' => array('title' => t('UPS Next Day Air Saver'), 'description' => t('Next Day Air Saver')),
@@ -149,7 +149,7 @@ function _commerce_ups_service_list() {
     '02' => array('title' => t('UPS 2nd Day Air'), 'description' => t('2nd Day Air')),
     '59' => array('title' => t('UPS 2nd Day Air A.M.'), 'description' => t('2nd Day Air A.M.')),
     '12' => array('title' => t('UPS 3 Day Select'), 'description' => t('3 Day Select')),
-    // International services
+    // International services.
     '11' => array('title' => t('UPS Standard'), 'description' => t('International Standard')),
     '07' => array('title' => t('UPS Worldwide Express'), 'description' => t('Worldwide Express')),
     '08' => array('title' => t('UPS Worldwide Expedited'), 'description' => t('Worldwide Expedited')),

@@ -37,8 +37,6 @@ class CommerceUPSAdministrationTestCase extends CommerceBaseTestCase {
     $final_permissions = array_unique(array_merge($permissions, array('administer shipping')));
     $user = $this->drupalCreateUser($final_permissions);
     $this->drupalLogin($user);
-
-    //$this->site_admin = $this->createSiteAdmin();
   }
 
   public function testCommerceUPSSettingsForm() {

@@ -1,7 +1,11 @@
 name = UPS
 description = Integrates UPS with Commerce Shipping to rate selected UPS services during checkout.
 package = Commerce (shipping)
+core = 7.x
+
 dependencies[] = commerce
 dependencies[] = commerce_shipping
 dependencies[] = commerce_physical
-core = 7.x
+
+; Simple tests
+files[] = tests/commerce_ups.test
