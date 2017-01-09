@@ -158,6 +158,9 @@ function commerce_ups_build_rate_request($order) {
  *   An XML string to submit to the Progistics XML Processor.
  * @param $message
  *   Optional log message to use for logged API requests.
+ *
+ * @return mixed
+ *   False if failed, SimpleXMLElement object if successful.
  */
 function commerce_ups_api_request($method, $xml, $message = '') {
   // Log the API request if specified.

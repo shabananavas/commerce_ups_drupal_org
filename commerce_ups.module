@@ -291,7 +291,14 @@ function commerce_ups_encryption_available($options = array()) {
  */
 function commerce_ups_api_endpoint($method) {
   $endpoints = array(
-    'Rate' => 'https://onlinetools.ups.com/ups.app/xml/Rate',
+    'Rate'        => 'https://onlinetools.ups.com/ups.app/xml/Rate',
+    'ShipConfirm' => 'https://onlinetools.ups.com/ups.app/xml/ShipConfirm',
+    'ShipAccept'  => 'https://onlinetools.ups.com/ups.app/xml/ShipAccept',
+
+    // Test URLs
+    'RateTest'        => 'https://wwwcie.ups.com/ups.app/xml/Rate',
+    'ShipConfirmTest' => 'https://wwwcie.ups.com/ups.app/xml/ShipConfirm',
+    'ShipAcceptTest'  => 'https://wwwcie.ups.com/ups.app/xml/ShipAccept',
   );
 
   // Allow other modules to alter the API endpoints.
