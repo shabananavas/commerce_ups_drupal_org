@@ -113,8 +113,8 @@ class UPSShipment extends UPSEntity {
    */
   public function setWeight(UPSPackage $ups_package) {
     $ups_package_weight = $ups_package->getPackageWeight();
-    $ups_package_weight->setWeight($this->shipment->getPackageType()->getWeight()->getNumber());
-    $unit = $this->getUnitOfMeasure($this->shipment->getPackageType()->getWeight()->getUnit());
+    $ups_package_weight->setWeight($this->shipment->getWeight()->getNumber());
+    $unit = $this->getUnitOfMeasure($this->shipment->getWeight()->getUnit());
     $ups_package_weight->setUnitOfMeasurement($this->setUnitOfMeasurement($unit));
   }
 
