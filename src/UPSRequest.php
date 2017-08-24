@@ -31,7 +31,7 @@ abstract class UPSRequest implements UPSRequestInterface {
    *
    * @throws \Exception
    */
-  protected function getAuth() {
+  public function getAuth() {
     // Verify necessary configuration is available.
     if (empty($this->configuration['api_information']['access_key'])
     || empty($this->configuration['api_information']['user_id'])
