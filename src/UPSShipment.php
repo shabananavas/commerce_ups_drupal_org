@@ -5,6 +5,7 @@ namespace Drupal\commerce_ups;
 use Drupal\commerce_shipping\Entity\ShipmentInterface;
 use Ups\Entity\Package as UPSPackage;
 use Ups\Entity\Address;
+use Ups\Entity\PackagingType;
 use Ups\Entity\ShipFrom;
 use Ups\Entity\Shipment as APIShipment;
 use Ups\Entity\Dimensions;
@@ -86,6 +87,7 @@ class UPSShipment extends UPSEntity {
     $package = new UPSPackage();
     $this->setDimensions($package);
     $this->setWeight($package);
+    $this->setPackagingType($package);
     $api_shipment->addPackage($package);
   }
 
@@ -116,6 +118,19 @@ class UPSShipment extends UPSEntity {
     $ups_package_weight->setWeight($this->shipment->getWeight()->getNumber());
     $unit = $this->getUnitOfMeasure($this->shipment->getWeight()->getUnit());
     $ups_package_weight->setUnitOfMeasurement($this->setUnitOfMeasurement($unit));
+  }
+
+  /**
+   * Sets the package type for a UPS package.
+   *
+   * @param \Ups\Entity\Package $ups_package
+   *   A Ups API package entity.
+   */
+  public function setPackagingType(UPSPackage $ups_package) {
+    $remote_id = $this->shipment->getPackageType()->getRemoteId();
+    $attributes = new \stdClass();
+    $attributes->Code = !empty($remote_id) && $remote_id != 'custom' ? $remote_id : PackagingType::PT_UNKNOWN;
+    $ups_package->setPackagingType(new PackagingType($attributes));
   }
 
 }
