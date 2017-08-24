@@ -14,20 +14,20 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  id = "ups",
  *  label = @Translation("UPS"),
  *  services = {
- *   "01" = @translation("UPS Next Day Air"),
- *   "02" = @translation("UPS Second Day Air"),
- *   "03" = @translation("UPS Ground"),
- *   "07" = @translation("UPS Worldwide Express"),
- *   "08" = @translation("UPS Worldwide Expedited"),
- *   "11" = @translation("UPS Standard"),
- *   "12" = @translation("UPS Three-Day Select"),
- *   "13" = @translation("Next Day Air Saver"),
- *   "14" = @translation("UPS Next Day Air Early AM"),
- *   "54" = @translation("UPS Worldwide Express Plus"),
- *   "59" = @translation("UPS Second Day Air AM"),
- *   "65" = @translation("UPS Saver"),
- *   "70" = @translation("UPS Access Point Economy"),
- *   },
+ *    "_01" = @translation("UPS Next Day Air"),
+ *    "_02" = @translation("UPS Second Day Air"),
+ *    "_03" = @translation("UPS Ground"),
+ *    "_07" = @translation("UPS Worldwide Express"),
+ *    "_08" = @translation("UPS Worldwide Expedited"),
+ *    "_11" = @translation("UPS Standard"),
+ *    "_12" = @translation("UPS Three-Day Select"),
+ *    "_13" = @translation("Next Day Air Saver"),
+ *    "_14" = @translation("UPS Next Day Air Early AM"),
+ *    "_54" = @translation("UPS Worldwide Express Plus"),
+ *    "_59" = @translation("UPS Second Day Air AM"),
+ *    "_65" = @translation("UPS Saver"),
+ *    "_70" = @translation("UPS Access Point Economy")
+ *   }
  * )
  */
 class UPS extends ShippingMethodBase {
@@ -51,9 +51,36 @@ class UPS extends ShippingMethodBase {
    *   The rate request service.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, PackageTypeManagerInterface $packageTypeManager, UPSRequestInterface $ups_rate_request) {
+    // Rewrite the service keys to be integers.
+    $this->prepareServiceKeys($plugin_definition);
+
     parent::__construct($configuration, $plugin_id, $plugin_definition, $packageTypeManager);
     $this->ups_rate_service = $ups_rate_request;
     $this->ups_rate_service->setConfig($configuration);
+  }
+
+  /**
+   * Prepares the service array keys to support integer values.
+   *
+   * See https://www.drupal.org/node/2904467 for more information.
+   * todo: Remove once core issue has been addressed.
+   *
+   * @param mixed $plugin_definition
+   *   The plugin definition provided to the class.
+   */
+  private function prepareServiceKeys($plugin_definition) {
+    // Cache and unset the parsed plugin definitions for services.
+    $services = $plugin_definition['services'];
+    unset($plugin_definition['services']);
+
+    // Loop over each service definition and redefine them with
+    // integer keys that match the UPS API.
+    foreach ($services as $key => $service) {
+      // Remove the "_" from the service key.
+      $key_trimmed = str_replace('_', '', $key);
+      $plugin_definition['services'][$key_trimmed] = $service;
+    }
+
   }
 
   /**
