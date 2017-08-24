@@ -10,6 +10,9 @@ use Drupal\commerce_ups\UPSRateRequest;
  * @package Drupal\Tests\commerce_ups\Unit
  */
 class UPSRateRequestTest extends UPSUnitTestBase {
+  /**
+   * @var \Drupal\commerce_ups\UPSRateRequest
+   */
   protected $rate_request;
 
   /**
@@ -26,9 +29,9 @@ class UPSRateRequestTest extends UPSUnitTestBase {
    */
   public function testAuth() {
     $auth = $this->rate_request->getAuth();
-    $this->assertEquals($auth['access_key'], '123');
-    $this->assertEquals($auth['user_id'], '123');
-    $this->assertEquals($auth['password'], '123');
+    $this->assertEquals($auth['access_key'], $this->configuration['api_information']['access_key']);
+    $this->assertEquals($auth['user_id'], $this->configuration['api_information']['user_id']);
+    $this->assertEquals($auth['password'], $this->configuration['api_information']['password']);
   }
 
   /**
@@ -45,6 +48,30 @@ class UPSRateRequestTest extends UPSUnitTestBase {
   public function testRateType() {
     $type = $this->rate_request->getRateType();
     $this->assertEquals(TRUE, $type);
+  }
+
+  /**
+   * Test rate requests return valid rates.
+   */
+  public function testRateRequest() {
+    // Create a mock commerce shipment object.
+    $shipment = $this->mockShipment();
+
+    // Invoke the rate request object.
+    $this->rate_request->setShipment($shipment);
+    $rates = $this->rate_request->getRates();
+
+    // Make sure at least one rate was returned.
+    $this->assertArrayHasKey(0, $rates);
+
+    foreach ($rates as $rate) {
+      /* @var \Drupal\commerce_shipping\ShippingRate $rate */
+      $this->assertInstanceOf('Drupal\commerce_shipping\ShippingRate', $rate);
+      $this->assertInstanceOf('Drupal\commerce_price\Price', $rate->getAmount());
+      $this->assertGreaterThan(0, $rate->getAmount()->getNumber());
+      $this->assertEquals($rate->getAmount()->getCurrencyCode(), 'USD');
+      $this->assertNotEmpty($rate->getService()->getLabel());
+    }
   }
 
 }
