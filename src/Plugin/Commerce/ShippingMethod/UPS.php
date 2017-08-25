@@ -228,8 +228,15 @@ class UPS extends ShippingMethodBase {
    *   The rates.
    */
   public function calculateRates(ShipmentInterface $shipment) {
-    $this->ups_rate_service->setShipment($shipment);
-    return $this->ups_rate_service->getRates();
+    $rates = [];
+
+    // Only attempt to collect rates if an address exits on the shipment.
+    if (!$shipment->getShippingProfile()->get('address')->isEmpty()) {
+      $this->ups_rate_service->setShipment($shipment);
+      $rates = $this->ups_rate_service->getRates();
+    }
+
+    return $rates;
   }
 
   /**
