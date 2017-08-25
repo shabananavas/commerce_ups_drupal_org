@@ -7,7 +7,8 @@ use Drupal\commerce_ups\UPSRateRequest;
 /**
  * Class UPSRateRequestTest.
  *
- * @package Drupal\Tests\commerce_ups\Unit
+ * @coversDefaultClass \Drupal\commerce_ups\UPSRateRequest
+ * @group commerce_ups
  */
 class UPSRateRequestTest extends UPSUnitTestBase {
   /**
@@ -26,6 +27,8 @@ class UPSRateRequestTest extends UPSUnitTestBase {
 
   /**
    * Test getAuth response.
+   *
+   * @covers ::getAuth
    */
   public function testAuth() {
     $auth = $this->rate_request->getAuth();
@@ -36,6 +39,8 @@ class UPSRateRequestTest extends UPSUnitTestBase {
 
   /**
    * Test useIntegrationMode().
+   *
+   * @covers :: useIntegrationMode
    */
   public function testIntegrationMode() {
     $mode = $this->rate_request->useIntegrationMode();
@@ -44,6 +49,8 @@ class UPSRateRequestTest extends UPSUnitTestBase {
 
   /**
    * Test getRateType().
+   *
+   * @covers ::getRateType
    */
   public function testRateType() {
     $type = $this->rate_request->getRateType();
@@ -52,6 +59,8 @@ class UPSRateRequestTest extends UPSUnitTestBase {
 
   /**
    * Test rate requests return valid rates.
+   *
+   * @covers ::getRates
    */
   public function testRateRequest() {
     // Create a mock commerce shipment object.
