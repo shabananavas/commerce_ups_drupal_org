@@ -52,7 +52,7 @@ class UPS extends ShippingMethodBase {
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, PackageTypeManagerInterface $packageTypeManager, UPSRequestInterface $ups_rate_request) {
     // Rewrite the service keys to be integers.
-    $this->prepareServiceKeys($plugin_definition);
+    $plugin_definition = $this->preparePluginDefinition($plugin_definition);
 
     parent::__construct($configuration, $plugin_id, $plugin_definition, $packageTypeManager);
     $this->ups_rate_service = $ups_rate_request;
@@ -65,10 +65,13 @@ class UPS extends ShippingMethodBase {
    * See https://www.drupal.org/node/2904467 for more information.
    * todo: Remove once core issue has been addressed.
    *
-   * @param mixed $plugin_definition
+   * @param array $plugin_definition
    *   The plugin definition provided to the class.
+   *
+   * @return array
+   *   The prepared plugin definition.
    */
-  private function prepareServiceKeys($plugin_definition) {
+  private function preparePluginDefinition(array $plugin_definition) {
     // Cache and unset the parsed plugin definitions for services.
     $services = $plugin_definition['services'];
     unset($plugin_definition['services']);
@@ -81,6 +84,7 @@ class UPS extends ShippingMethodBase {
       $plugin_definition['services'][$key_trimmed] = $service;
     }
 
+    return $plugin_definition;
   }
 
   /**
