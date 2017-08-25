@@ -40,7 +40,7 @@ class UPSRateRequestTest extends UPSUnitTestBase {
   /**
    * Test useIntegrationMode().
    *
-   * @covers :: useIntegrationMode
+   * @covers ::useIntegrationMode
    */
   public function testIntegrationMode() {
     $mode = $this->rate_request->useIntegrationMode();
