@@ -85,8 +85,18 @@ class UPSRateRequest extends UPSRequest {
           continue;
         }
 
-        $cost = $ups_rate->TotalCharges->MonetaryValue;
-        $currency = $ups_rate->TotalCharges->CurrencyCode;
+        // Use negotiated rates if they were returned.
+        if ($this->getRateType() && !empty($ups_rate->NegotiatedRates->NetSummaryCharges->GrandTotal->MonetaryValue)) {
+          $cost = $ups_rate->NegotiatedRates->NetSummaryCharges->GrandTotal->MonetaryValue;
+          $currency = $ups_rate->NegotiatedRates->NetSummaryCharges->GrandTotal->CurrencyCode;
+        }
+
+        // Otherwise, use the default rates.
+        else {
+          $cost = $ups_rate->TotalCharges->MonetaryValue;
+          $currency = $ups_rate->TotalCharges->CurrencyCode;
+        }
+
         $price = new Price((string) $cost, $currency);
         $service_name = $ups_rate->Service->getName();
 
