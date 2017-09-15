@@ -53,6 +53,7 @@ class UPSShipment extends UPSEntity {
     $to_address->setAddressLine1($address->getAddressLine1());
     $to_address->setAddressLine2($address->getAddressLine2());
     $to_address->setCity($address->getLocality());
+    $to_address->setCountryCode($address->getCountryCode());
     $to_address->setStateProvinceCode($address->getAdministrativeArea());
     $to_address->setPostalCode($address->getPostalCode());
     $api_shipment->getShipTo()->setAddress($to_address);
@@ -71,6 +72,7 @@ class UPSShipment extends UPSEntity {
     $from_address->setAddressLine1($address->getAddressLine1());
     $from_address->setAddressLine2($address->getAddressLine2());
     $from_address->setCity($address->getDependentLocality());
+    $from_address->setCountryCode($address->getCountryCode());
     $from_address->setStateProvinceCode($address->getAdministrativeArea());
     $from_address->setPostalCode($address->getPostalCode());
     $ship_from = new ShipFrom();
