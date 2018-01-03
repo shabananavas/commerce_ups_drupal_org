@@ -101,7 +101,7 @@ class UPSRateRequest extends UPSRequest {
         $service_name = $ups_rate->Service->getName();
 
         $shipping_service = new ShippingService(
-          $service_name,
+          $service_code,
           $service_name
         );
         $rates[] = new ShippingRate(
