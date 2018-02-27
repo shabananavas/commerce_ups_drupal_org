@@ -68,7 +68,16 @@ function commerce_ups_build_rate_request($order) {
     return FALSE;
   }
 
+  // Calculate the number of packages based on the following logic:
+  //   1. Total order volume / Default package volume (as set in the UI).
+  //   2. If the weight per package is greater than 150lbs, then add another
+  //      package until the weight per package is less than 150lbs.
   $number_of_packages = ceil($volume['volume'] / $default_package_volume);
+  $weight_per_package = $weight['weight'] / $number_of_packages;
+  while ($weight_per_package > 150) {
+    $number_of_packages++;
+    $weight_per_package = $weight['weight'] / $number_of_packages;
+  }
 
   /* Pickup Schedule */
 
