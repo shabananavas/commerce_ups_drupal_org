@@ -142,26 +142,69 @@ function commerce_ups_commerce_shipping_service_rate_options_alter(& $options, $
 function _commerce_ups_service_list() {
   $services = array(
     // Domestic services.
-    '03' => array('title' => t('UPS Ground'), 'description' => t('Ground Delivery')),
-    '01' => array('title' => t('UPS Next Day Air'), 'description' => t('Next Day Air')),
-    '13' => array('title' => t('UPS Next Day Air Saver'), 'description' => t('Next Day Air Saver')),
-    '14' => array('title' => t('UPS Next Day Early A.M.'), 'description' => t('Next Day Early A.M.')),
-    '02' => array('title' => t('UPS 2nd Day Air'), 'description' => t('2nd Day Air')),
-    '59' => array('title' => t('UPS 2nd Day Air A.M.'), 'description' => t('2nd Day Air A.M.')),
-    '12' => array('title' => t('UPS 3 Day Select'), 'description' => t('3 Day Select')),
+    '03' => array(
+      'title' => t('UPS Ground'),
+      'description' => t('Ground Delivery'),
+      'slug' => 'ups_ground',
+    ),
+    '01' => array(
+      'title' => t('UPS Next Day Air'),
+      'description' => t('Next Day Air'),
+      'slug' => 'ups_next_day_air',
+    ),
+    '13' => array(
+      'title' => t('UPS Next Day Air Saver'),
+      'description' => t('Next Day Air Saver'),
+      'slug' => 'ups_next_day_air_saver',
+    ),
+    '14' => array(
+      'title' => t('UPS Next Day Early A.M.'),
+      'description' => t('Next Day Early A.M.'),
+      'slug' => 'ups_next_day_early_a.m.',
+    ),
+    '02' => array(
+      'title' => t('UPS 2nd Day Air'),
+      'description' => t('2nd Day Air'),
+      'slug' => 'ups_2nd_day_air',
+    ),
+    '59' => array(
+      'title' => t('UPS 2nd Day Air A.M.'),
+      'description' => t('2nd Day Air A.M.'),
+      'slug' => 'ups_2nd_day_air_a.m.',
+    ),
+    '12' => array(
+      'title' => t('UPS 3 Day Select'),
+      'description' => t('3 Day Select'),
+      'slug' => 'ups_3_day_select.',
+    ),
     // International services.
-    '11' => array('title' => t('UPS Standard'), 'description' => t('International Standard')),
-    '07' => array('title' => t('UPS Worldwide Express'), 'description' => t('Worldwide Express')),
-    '08' => array('title' => t('UPS Worldwide Expedited'), 'description' => t('Worldwide Expedited')),
-    '54' => array('title' => t('UPS Worldwide Express Plus'), 'description' => t('Worldwide Express Plus')),
-    '65' => array('title' => t('UPS Worldwide Saver'), 'description' => t('Worldwide Saver')),
+    '11' => array(
+      'title' => t('UPS Standard'),
+      'description' => t('International Standard'),
+      'slug' => 'ups_standard',
+    ),
+    '07' => array(
+      'title' => t('UPS Worldwide Express'),
+      'description' => t('Worldwide Express'),
+      'slug' => 'ups_worldwide_express',
+    ),
+    '08' => array(
+      'title' => t('UPS Worldwide Expedited'),
+      'description' => t('Worldwide Expedited'),
+      'slug' => 'ups_worldwide_expedited',
+    ),
+    '54' => array(
+      'title' => t('UPS Worldwide Express Plus'),
+      'description' => t('Worldwide Express Plus'),
+      'slug' => 'ups_worldwide_express_plus',
+    ),
+    '65' => array(
+      'title' => t('UPS Worldwide Saver'),
+      'description' => t('Worldwide Saver'),
+      'slug' => 'ups_worldwide_saver',
+    ),
   );
 
-  // Make a unique ID to identify the service by.
-  foreach ($services as $key => $service) {
-    $service['slug'] = str_replace(' ', '_', drupal_strtolower($service['title']));
-    $services[$key] = $service;
-  }
   return $services;
 }
 
