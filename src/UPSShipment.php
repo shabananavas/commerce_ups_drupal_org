@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_ups;
 
-use CommerceGuys\Addressing\AddressInterface;
 use Drupal\commerce_shipping\Entity\ShipmentInterface;
+use Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface;
 use Ups\Entity\Package as UPSPackage;
 use Ups\Entity\Address;
 use Ups\Entity\PackagingType;
@@ -11,28 +11,45 @@ use Ups\Entity\ShipFrom;
 use Ups\Entity\Shipment as APIShipment;
 use Ups\Entity\Dimensions;
 
-class UPSShipment extends UPSEntity {
+class UPSShipment extends UPSEntity implements UPSShipmentInterface {
+
+  /**
+   * The commerce shipment.
+   *
+   * @var \Drupal\commerce_shipping\Entity\ShipmentInterface
+   */
   protected $shipment;
+
+  /**
+   * The UPS API shipment entity.
+   *
+   * @var \Ups\Entity\Shipment
+   */
   protected $api_shipment;
 
   /**
-   * UPSShipment constructor.
+   * The shipping method.
    *
-   * @param \Drupal\commerce_shipping\Entity\ShipmentInterface $shipment
-   *   A commerce shipping shipment object.
+   * @var \Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface
    */
-  public function __construct(ShipmentInterface $shipment) {
-    parent::__construct();
-    $this->shipment = $shipment;
-  }
+  protected $shipping_method;
 
   /**
    * Creates and returns a Ups API shipment object.
    *
+   * @param \Drupal\commerce_shipping\Entity\ShipmentInterface $shipment
+   *   The shipment.
+   * @param \Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface $shipping_method
+   *   The shipping method.
+   *
    * @return \Ups\Entity\Shipment
    *   A Ups API shipment object.
+   *
+   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
-  public function getShipment() {
+  public function getShipment(ShipmentInterface $shipment, ShippingMethodInterface $shipping_method) {
+    $this->shipment = $shipment;
+    $this->shipping_method = $shipping_method;
     $api_shipment = new APIShipment();
     $this->setShipTo($api_shipment);
     $this->setShipFrom($api_shipment);
@@ -45,9 +62,11 @@ class UPSShipment extends UPSEntity {
    *
    * @param \Ups\Entity\Shipment $api_shipment
    *   A Ups API shipment object.
+   *
+   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    */
   public function setShipTo(APIShipment $api_shipment) {
-    /** @var AddressInterface $address */
+    /** @var \CommerceGuys\Addressing\AddressInterface $address */
     $address = $this->shipment->getShippingProfile()->get('address')->first();
     $to_address = new Address();
     $to_address->setAddressLine1($address->getAddressLine1());
@@ -66,12 +85,12 @@ class UPSShipment extends UPSEntity {
    *   A Ups API shipment object.
    */
   public function setShipFrom(APIShipment $api_shipment) {
-    /** @var AddressInterface $address */
+    /** @var \CommerceGuys\Addressing\AddressInterface $address */
     $address = $this->shipment->getOrder()->getStore()->getAddress();
     $from_address = new Address();
     $from_address->setAddressLine1($address->getAddressLine1());
     $from_address->setAddressLine2($address->getAddressLine2());
-    $from_address->setCity($address->getDependentLocality());
+    $from_address->setCity($address->getLocality());
     $from_address->setCountryCode($address->getCountryCode());
     $from_address->setStateProvinceCode($address->getAdministrativeArea());
     $from_address->setPostalCode($address->getPostalCode());
@@ -102,10 +121,11 @@ class UPSShipment extends UPSEntity {
    */
   public function setDimensions(UPSPackage $ups_package) {
     $dimensions = new Dimensions();
-    $dimensions->setHeight($this->shipment->getPackageType()->getHeight()->getNumber());
-    $dimensions->setWidth($this->shipment->getPackageType()->getWidth()->getNumber());
-    $dimensions->setLength($this->shipment->getPackageType()->getLength()->getNumber());
-    $unit = $this->getUnitOfMeasure($this->shipment->getPackageType()->getLength()->getUnit());
+
+    $dimensions->setHeight($this->getPackageType()->getHeight()->getNumber());
+    $dimensions->setWidth($this->getPackageType()->getWidth()->getNumber());
+    $dimensions->setLength($this->getPackageType()->getLength()->getNumber());
+    $unit = $this->getUnitOfMeasure($this->getPackageType()->getLength()->getUnit());
     $dimensions->setUnitOfMeasurement($this->setUnitOfMeasurement($unit));
     $ups_package->setDimensions($dimensions);
   }
@@ -130,10 +150,27 @@ class UPSShipment extends UPSEntity {
    *   A Ups API package entity.
    */
   public function setPackagingType(UPSPackage $ups_package) {
-    $remote_id = $this->shipment->getPackageType()->getRemoteId();
+    $remote_id = $this->getPackageType()->getRemoteId();
     $attributes = new \stdClass();
     $attributes->Code = !empty($remote_id) && $remote_id != 'custom' ? $remote_id : PackagingType::PT_UNKNOWN;
     $ups_package->setPackagingType(new PackagingType($attributes));
+  }
+
+  /**
+   * Determine the package type for the shipment.
+   *
+   * @return \Drupal\commerce_shipping\Plugin\Commerce\PackageType\PackageTypeInterface
+   *   The package type.
+   */
+  protected function getPackageType() {
+    // If the package is set on the shipment, use that.
+    if (!empty($this->shipment->getPackageType())) {
+      return $this->shipment->getPackageType();
+    }
+    // Or use the default package type for the shipping method.
+    else {
+      return $this->shipping_method->getDefaultPackageType();
+    }
   }
 
 }

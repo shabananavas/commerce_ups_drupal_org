@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_ups\Unit;
 
+use Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\physical\Length;
@@ -94,6 +95,22 @@ abstract class UPSUnitTestBase extends UnitTestCase {
 
     // Return the mocked shipment object.
     return $shipment->reveal();
+  }
+
+  /**
+   * @return \Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface
+   *   The mocked shipping method.
+   */
+  public function mockShippingMethod() {
+    $shipping_method = $this->prophesize(ShippingMethodInterface::class);
+    $package_type = $this->prophesize(PackageTypeInterface::class);
+    $package_type->getHeight()->willReturn(new Length(10, 'in'));
+    $package_type->getLength()->willReturn(new Length(10, 'in'));
+    $package_type->getWidth()->willReturn(new Length(3, 'in'));
+    $package_type->getWeight()->willReturn(new Weight(10, 'lb'));
+    $package_type->getRemoteId()->willReturn('custom');
+    $shipping_method->getDefaultPackageType()->willReturn($package_type);
+    return $shipping_method->reveal();
   }
 
 }

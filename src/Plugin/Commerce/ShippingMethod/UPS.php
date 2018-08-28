@@ -32,7 +32,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class UPS extends ShippingMethodBase {
   /**
-   * @var \Drupal\commerce_ups\UPSRateRequest
+   * The UPS rate service.
+   *
+   * @var \Drupal\commerce_ups\UPSRateRequestInterface
    */
   protected $ups_rate_service;
 
@@ -53,10 +55,22 @@ class UPS extends ShippingMethodBase {
   public function __construct(array $configuration, $plugin_id, $plugin_definition, PackageTypeManagerInterface $packageTypeManager, UPSRequestInterface $ups_rate_request) {
     // Rewrite the service keys to be integers.
     $plugin_definition = $this->preparePluginDefinition($plugin_definition);
-
     parent::__construct($configuration, $plugin_id, $plugin_definition, $packageTypeManager);
     $this->ups_rate_service = $ups_rate_request;
     $this->ups_rate_service->setConfig($configuration);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('plugin.manager.commerce_package_type'),
+      $container->get('commerce_ups.ups_rate_request')
+    );
   }
 
   /**
@@ -85,19 +99,6 @@ class UPS extends ShippingMethodBase {
     }
 
     return $plugin_definition;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('plugin.manager.commerce_package_type'),
-      $container->get('commerce_ups.ups_rate_request')
-    );
   }
 
   /**
@@ -232,8 +233,7 @@ class UPS extends ShippingMethodBase {
 
     // Only attempt to collect rates if an address exits on the shipment.
     if (!$shipment->getShippingProfile()->get('address')->isEmpty()) {
-      $this->ups_rate_service->setShipment($shipment);
-      $rates = $this->ups_rate_service->getRates();
+      $rates = $this->ups_rate_service->getRates($shipment, $this);
     }
 
     return $rates;

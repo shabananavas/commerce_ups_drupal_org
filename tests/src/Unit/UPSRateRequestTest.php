@@ -3,6 +3,7 @@
 namespace Drupal\Tests\commerce_ups\Unit;
 
 use Drupal\commerce_ups\UPSRateRequest;
+use Drupal\commerce_ups\UPSShipment;
 
 /**
  * Class UPSRateRequestTest.
@@ -21,7 +22,7 @@ class UPSRateRequestTest extends UPSUnitTestBase {
    */
   public function setUp() {
     parent::setUp();
-    $this->rate_request = new UPSRateRequest();
+    $this->rate_request = new UPSRateRequest(new UPSShipment());
     $this->rate_request->setConfig($this->configuration);
   }
 
@@ -63,12 +64,8 @@ class UPSRateRequestTest extends UPSUnitTestBase {
    * @covers ::getRates
    */
   public function testRateRequest() {
-    // Create a mock commerce shipment object.
-    $shipment = $this->mockShipment();
-
     // Invoke the rate request object.
-    $this->rate_request->setShipment($shipment);
-    $rates = $this->rate_request->getRates();
+    $rates = $this->rate_request->getRates($this->mockShipment(), $this->mockShippingMethod());
 
     // Make sure at least one rate was returned.
     $this->assertArrayHasKey(0, $rates);

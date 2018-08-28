@@ -4,8 +4,10 @@ namespace Drupal\commerce_ups;
 
 use Drupal\commerce_price\Price;
 use Drupal\commerce_shipping\Entity\ShipmentInterface;
+use Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface;
 use Drupal\commerce_shipping\ShippingRate;
 use Drupal\commerce_shipping\ShippingService;
+use Psr\Container\ContainerInterface;
 use Ups\Rate;
 use Ups\Entity\RateInformation;
 
@@ -14,40 +16,78 @@ use Ups\Entity\RateInformation;
  *
  * @package Drupal\commerce_ups
  */
-class UPSRateRequest extends UPSRequest {
+class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
   /**
-   * @var \Drupal\commerce_shipping\Entity\ShipmentInterface*/
+   * The commerce shipment.
+   *
+   * @var \Drupal\commerce_shipping\Entity\ShipmentInterface
+   */
   protected $commerce_shipment;
 
   /**
-   * @var array*/
+   * The commerce shipping method.
+   *
+   * @var \Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface
+   */
+  protected $shipping_method;
+
+  /**
+   * A shipping method configuration array.
+   *
+   * @var array
+   */
   protected $configuration;
 
   /**
-   * @var UPSShipment*/
+   * The UPS Shipment object.
+   *
+   * @var \Drupal\commerce_ups\UPSShipmentInterface
+   */
   protected $ups_shipment;
 
   /**
-   * Set the shipment for rate requests.
+   * UPSRateRequest constructor.
    *
-   * @param \Drupal\commerce_shipping\Entity\ShipmentInterface $commerce_shipment
-   *   A Drupal Commerce shipment entity.
+   * @param \Drupal\commerce_ups\UPSShipmentInterface $ups_shipment
+   *   The UPS shipment object.
    */
-  public function setShipment(ShipmentInterface $commerce_shipment) {
-    $this->commerce_shipment = $commerce_shipment;
+  public function __construct(UPSShipmentInterface $ups_shipment) {
+    $this->ups_shipment = $ups_shipment;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('commerce_ups.ups_shipment')
+    );
   }
 
   /**
    * Fetch rates from the UPS API.
+   *
+   * @param \Drupal\commerce_shipping\Entity\ShipmentInterface $commerce_shipment
+   *   The commerce shipment.
+   * @param \Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface $shipping_method
+   *   The shipping method.
+   *
+   * @throws \Exception
+   *   Exception when required properties are missing.
+   *
+   * @return array
+   *   An array of ShippingRate objects.
    */
-  public function getRates() {
-    // Validate a commerce shipment has been provided.
-    if (empty($this->commerce_shipment)) {
-      throw new \Exception('Shipment not provided');
-    }
-
+  public function getRates(ShipmentInterface $commerce_shipment, ShippingMethodInterface $shipping_method) {
     $rates = [];
-    $auth = $this->getAuth();
+
+    try {
+      $auth = $this->getAuth();
+    }
+    catch (\Exception $exception) {
+      \Drupal::logger('commerce_ups')->error(dt('Unable to fetch authentication config for UPS. Please check your shipping method configuration.'));
+      return [];
+    }
 
     $request = new Rate(
       $auth['access_key'],
@@ -57,8 +97,7 @@ class UPSRateRequest extends UPSRequest {
     );
 
     try {
-      $ups_shipment = new UPSShipment($this->commerce_shipment);
-      $shipment = $ups_shipment->getShipment();
+      $shipment = $this->ups_shipment->getShipment($commerce_shipment, $shipping_method);
 
       // Enable negotiated rates, if enabled.
       if ($this->getRateType()) {
