@@ -4,6 +4,8 @@ namespace Drupal\Tests\commerce_ups\Unit;
 
 use Drupal\commerce_ups\UPSRateRequest;
 use Drupal\commerce_ups\UPSShipment;
+use Drupal\physical\LengthUnit;
+use Drupal\physical\WeightUnit;
 
 /**
  * Class UPSRateRequestTest.
@@ -61,11 +63,22 @@ class UPSRateRequestTest extends UPSUnitTestBase {
   /**
    * Test rate requests return valid rates.
    *
+   * @param string $weight_unit
+   *   Weight unit.
+   * @param string $length_unit
+   *   Length unit.
+   * @param bool $send_from_usa
+   *   Whether the shipment should be sent from USA.
+   *
    * @covers ::getRates
+   *
+   * @dataProvider measurementUnitsDataProvider
    */
-  public function testRateRequest() {
+  public function testRateRequest($weight_unit, $length_unit, $send_from_usa) {
     // Invoke the rate request object.
-    $rates = $this->rate_request->getRates($this->mockShipment(), $this->mockShippingMethod());
+    $shipment = $this->mockShipment($weight_unit, $length_unit, $send_from_usa);
+    $shipping_method = $this->mockShippingMethod();
+    $rates = $this->rate_request->getRates($shipment, $shipping_method);
 
     // Make sure at least one rate was returned.
     $this->assertArrayHasKey(0, $rates);
@@ -75,8 +88,33 @@ class UPSRateRequestTest extends UPSUnitTestBase {
       $this->assertInstanceOf('Drupal\commerce_shipping\ShippingRate', $rate);
       $this->assertInstanceOf('Drupal\commerce_price\Price', $rate->getAmount());
       $this->assertGreaterThan(0, $rate->getAmount()->getNumber());
-      $this->assertEquals($rate->getAmount()->getCurrencyCode(), 'USD');
+      $this->assertEquals($rate->getAmount()->getCurrencyCode(), $send_from_usa ? 'USD' : 'EUR');
       $this->assertNotEmpty($rate->getService()->getLabel());
+    }
+  }
+
+  /**
+   * Data provider for testRateRequest()
+   */
+  public function measurementUnitsDataProvider() {
+    $weight_units = [
+      WeightUnit::GRAM,
+      WeightUnit::KILOGRAM,
+      WeightUnit::OUNCE,
+      WeightUnit::POUND,
+    ];
+    $length_units = [
+      LengthUnit::MILLIMETER,
+      LengthUnit::CENTIMETER,
+      LengthUnit::METER,
+      LengthUnit::INCH,
+      LengthUnit::FOOT,
+    ];
+    foreach ($weight_units as $weight_unit) {
+      foreach ($length_units as $length_unit) {
+        yield [$weight_unit, $length_unit, TRUE];
+        yield [$weight_unit, $length_unit, FALSE];
+      }
     }
   }
 

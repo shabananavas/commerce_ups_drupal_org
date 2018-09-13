@@ -59,16 +59,31 @@ abstract class UPSUnitTestBase extends UnitTestCase {
   /**
    * Creates a mock Drupal Commerce shipment entity.
    *
+   * @param string $weight_unit
+   *   Weight measurement unit.
+   * @param string $length_unit
+   *   Length measurement unit.
+   * @param bool $send_form_usa
+   *   Whether the shipment should be sent from USA.
+   *
    * @return \Drupal\commerce_shipping\Entity\ShipmentInterface
    *   A mocked commerce shipment object.
    */
-  public function mockShipment() {
+  public function mockShipment($weight_unit = 'lb', $length_unit = 'in', $send_form_usa = TRUE) {
     // Mock a Drupal Commerce Order and associated objects.
     $order = $this->prophesize(OrderInterface::class);
     $store = $this->prophesize(StoreInterface::class);
 
     // Mock the getAddress method to return a US address.
-    $store->getAddress()->willReturn(new Address('US', 'NC', 'Asheville', '', 28806, '', '1025 Brevard Rd'));
+    if ($send_form_usa) {
+      $store->getAddress()->willReturn(new Address('US', 'NC', 'Asheville', '', 28806, '', '1025 Brevard Rd'));
+    }
+    else {
+      // Mock the address list to ship to Germany address.
+      // To those who are wondering, this is where Drupal Europe 2018 took
+      // place.
+      $store->getAddress()->willReturn(new Address('DE', '', 'Darmstadt', '', 64283, '', 'Schlossgraben 1'));
+    }
     $order->getStore()->willReturn($store->reveal());
 
     // Mock a Drupal Commerce shipment and associated objects.
@@ -84,13 +99,13 @@ abstract class UPSUnitTestBase extends UnitTestCase {
 
     // Mock a package type including dimensions and remote id.
     $package_type = $this->prophesize(PackageTypeInterface::class);
-    $package_type->getHeight()->willReturn(new Length(10, 'in'));
-    $package_type->getLength()->willReturn(new Length(10, 'in'));
-    $package_type->getWidth()->willReturn(new Length(3, 'in'));
+    $package_type->getHeight()->willReturn((new Length(10, 'in'))->convert($length_unit));
+    $package_type->getLength()->willReturn((new Length(10, 'in'))->convert($length_unit));
+    $package_type->getWidth()->willReturn((new Length(3, 'in'))->convert($length_unit));
     $package_type->getRemoteId()->willReturn(PackagingType::PT_UNKNOWN);
 
     // Mock the shipments weight and package type.
-    $shipment->getWeight()->willReturn(new Weight(10, 'lb'));
+    $shipment->getWeight()->willReturn((new Weight(10, 'lb'))->convert($weight_unit));
     $shipment->getPackageType()->willReturn($package_type->reveal());
 
     // Return the mocked shipment object.

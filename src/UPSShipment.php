@@ -4,8 +4,11 @@ namespace Drupal\commerce_ups;
 
 use Drupal\commerce_shipping\Entity\ShipmentInterface;
 use Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface;
+use Drupal\physical\LengthUnit;
+use Drupal\physical\WeightUnit;
 use Ups\Entity\Package as UPSPackage;
 use Ups\Entity\Address;
+use Ups\Entity\PackageWeight;
 use Ups\Entity\PackagingType;
 use Ups\Entity\ShipFrom;
 use Ups\Entity\Shipment as APIShipment;
@@ -122,11 +125,13 @@ class UPSShipment extends UPSEntity implements UPSShipmentInterface {
   public function setDimensions(UPSPackage $ups_package) {
     $dimensions = new Dimensions();
 
-    $dimensions->setHeight($this->getPackageType()->getHeight()->getNumber());
-    $dimensions->setWidth($this->getPackageType()->getWidth()->getNumber());
-    $dimensions->setLength($this->getPackageType()->getLength()->getNumber());
-    $unit = $this->getUnitOfMeasure($this->getPackageType()->getLength()->getUnit());
-    $dimensions->setUnitOfMeasurement($this->setUnitOfMeasurement($unit));
+    $valid_unit = $this->getValidDimensionsUnit($ups_package);
+
+    // Rounding dimensions since decimals are not allowed by the UPS API.
+    $dimensions->setHeight(ceil($this->getPackageType()->getHeight()->convert($valid_unit)->getNumber()));
+    $dimensions->setWidth(ceil($this->getPackageType()->getWidth()->convert($valid_unit)->getNumber()));
+    $dimensions->setLength(ceil($this->getPackageType()->getLength()->convert($valid_unit)->getNumber()));
+    $dimensions->setUnitOfMeasurement($this->setUnitOfMeasurement($this->getUnitOfMeasure($valid_unit)));
     $ups_package->setDimensions($dimensions);
   }
 
@@ -137,10 +142,12 @@ class UPSShipment extends UPSEntity implements UPSShipmentInterface {
    *   A package object from the Ups API.
    */
   public function setWeight(UPSPackage $ups_package) {
-    $ups_package_weight = $ups_package->getPackageWeight();
-    $ups_package_weight->setWeight($this->shipment->getWeight()->getNumber());
-    $unit = $this->getUnitOfMeasure($this->shipment->getWeight()->getUnit());
-    $ups_package_weight->setUnitOfMeasurement($this->setUnitOfMeasurement($unit));
+    $weight = $this->shipment->getWeight()->convert($this->getValidWeightUnit());
+
+    $ups_package_weight = new PackageWeight();
+    $ups_package_weight->setWeight($weight->getNumber());
+    $ups_package_weight->setUnitOfMeasurement($this->setUnitOfMeasurement($this->getUnitOfMeasure($weight->getUnit())));
+    $ups_package->setPackageWeight($ups_package_weight);
   }
 
   /**
@@ -171,6 +178,29 @@ class UPSShipment extends UPSEntity implements UPSShipmentInterface {
     else {
       return $this->shipping_method->getDefaultPackageType();
     }
+  }
+
+  /**
+   * Get valid dimensions measurement unit for a current store address.
+   *
+   * @return string
+   *   Valid measurement unit.
+   */
+  protected function getValidDimensionsUnit() {
+    $address = $this->shipment->getOrder()->getStore()->getAddress();
+    return $address->getCountryCode() == 'US' ? LengthUnit::INCH : LengthUnit::CENTIMETER;
+  }
+
+  /**
+   * Get valid weight measurement unit for a current store address.
+   *
+   * @return string
+   *   Valid measurement unit.
+   */
+  protected function getValidWeightUnit() {
+    /** @var \CommerceGuys\Addressing\Address $address */
+    $address = $this->shipment->getOrder()->getStore()->getAddress();
+    return $address->getCountryCode() == 'US' ? WeightUnit::POUND : WeightUnit::KILOGRAM;
   }
 
 }
