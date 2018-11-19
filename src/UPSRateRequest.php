@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_ups;
 
+use const COMMERCE_UPS_LOGGER_CHANNEL;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_shipping\Entity\ShipmentInterface;
 use Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface;
@@ -17,19 +18,6 @@ use Ups\Entity\RateInformation;
  * @package Drupal\commerce_ups
  */
 class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
-  /**
-   * The commerce shipment.
-   *
-   * @var \Drupal\commerce_shipping\Entity\ShipmentInterface
-   */
-  protected $commerce_shipment;
-
-  /**
-   * The commerce shipping method.
-   *
-   * @var \Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface
-   */
-  protected $shipping_method;
 
   /**
    * A shipping method configuration array.
@@ -43,7 +31,7 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
    *
    * @var \Drupal\commerce_ups\UPSShipmentInterface
    */
-  protected $ups_shipment;
+  protected $upsShipment;
 
   /**
    * UPSRateRequest constructor.
@@ -52,7 +40,7 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
    *   The UPS shipment object.
    */
   public function __construct(UPSShipmentInterface $ups_shipment) {
-    $this->ups_shipment = $ups_shipment;
+    $this->upsShipment = $ups_shipment;
   }
 
   /**
@@ -85,7 +73,11 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
       $auth = $this->getAuth();
     }
     catch (\Exception $exception) {
-      \Drupal::logger('commerce_ups')->error(dt('Unable to fetch authentication config for UPS. Please check your shipping method configuration.'));
+      \Drupal::logger(COMMERCE_UPS_LOGGER_CHANNEL)->error(
+        dt(
+          'Unable to fetch authentication config for UPS. Please check your shipping method configuration.'
+        )
+      );
       return [];
     }
 
@@ -97,7 +89,7 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
     );
 
     try {
-      $shipment = $this->ups_shipment->getShipment($commerce_shipment, $shipping_method);
+      $shipment = $this->upsShipment->getShipment($commerce_shipment, $shipping_method);
 
       // Enable negotiated rates, if enabled.
       if ($this->getRateType()) {
@@ -111,7 +103,7 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
       $ups_rates = $request->shopRates($shipment);
     }
     catch (\Exception $ex) {
-      \Drupal::logger('commerce_ups')->error($ex->getMessage());
+      \Drupal::logger(COMMERCE_UPS_LOGGER_CHANNEL)->error($ex->getMessage());
       $ups_rates = [];
     }
 

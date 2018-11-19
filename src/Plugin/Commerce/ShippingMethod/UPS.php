@@ -12,6 +12,8 @@ use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
+ * Creates a UPS shipping method.
+ *
  * @CommerceShippingMethod(
  *  id = "ups",
  *  label = @Translation("UPS"),
@@ -28,17 +30,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *    "_54" = @translation("UPS Worldwide Express Plus"),
  *    "_59" = @translation("UPS Second Day Air AM"),
  *    "_65" = @translation("UPS Saver"),
- *    "_70" = @translation("UPS Access Point Economy")
- *   }
+ *    "_70" = @translation("UPS Access Point Economy"),
+ *  }
  * )
  */
 class UPS extends ShippingMethodBase implements SupportsTrackingInterface {
+
   /**
-   * The UPS rate service.
+   * The service for fetching shipping rates from UPS.
    *
-   * @var \Drupal\commerce_ups\UPSRateRequestInterface
+   * @var \Drupal\commerce_ups\UPSRateRequest
    */
-  protected $ups_rate_service;
+  protected $upsRateService;
 
   /**
    * Constructs a new ShippingMethodBase object.
@@ -54,18 +57,36 @@ class UPS extends ShippingMethodBase implements SupportsTrackingInterface {
    * @param \Drupal\commerce_ups\UPSRequestInterface $ups_rate_request
    *   The rate request service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PackageTypeManagerInterface $packageTypeManager, UPSRequestInterface $ups_rate_request) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    PackageTypeManagerInterface $packageTypeManager,
+    UPSRequestInterface $ups_rate_request
+  ) {
     // Rewrite the service keys to be integers.
     $plugin_definition = $this->preparePluginDefinition($plugin_definition);
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $packageTypeManager);
-    $this->ups_rate_service = $ups_rate_request;
-    $this->ups_rate_service->setConfig($configuration);
+
+    parent::__construct(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $packageTypeManager
+    );
+
+    $this->upsRateService = $ups_rate_request;
+    $this->upsRateService->setConfig($configuration);
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition
+  ) {
     return new static(
       $configuration,
       $plugin_id,
@@ -79,7 +100,8 @@ class UPS extends ShippingMethodBase implements SupportsTrackingInterface {
    * Prepares the service array keys to support integer values.
    *
    * See https://www.drupal.org/node/2904467 for more information.
-   * todo: Remove once core issue has been addressed.
+   *
+   * @TODO: Remove once core issue has been addressed.
    *
    * @param array $plugin_definition
    *   The plugin definition provided to the class.
@@ -130,10 +152,20 @@ class UPS extends ShippingMethodBase implements SupportsTrackingInterface {
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
+    // Select all services by default.
+    if (empty($this->configuration['services'])) {
+      $service_ids = array_keys($this->services);
+      $this->configuration['services'] = array_combine($service_ids, $service_ids);
+    }
+
+    $description = $this->t('Update your UPS API information');
+    if (!$this->isConfigured()) {
+      $description = $this->t('Fill in your UPS API information.');
+    }
     $form['api_information'] = [
       '#type' => 'details',
       '#title' => $this->t('API information'),
-      '#description' => $this->isConfigured() ? $this->t('Update your UPS API information.') : $this->t('Fill in your UPS API information.'),
+      '#description' => $description,
       '#weight' => $this->isConfigured() ? 10 : -10,
       '#open' => !$this->isConfigured(),
     ];
@@ -194,7 +226,11 @@ class UPS extends ShippingMethodBase implements SupportsTrackingInterface {
     $form['options']['tracking_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Tracking URL base'),
-      '#description' => $this->t('The base URL for assembling a tracking URL. If the [tracking_code] token is omitted, the code will be appended to the end of the URL (e.g. "https://wwwapps.ups.com/tracking/tracking.cgi?tracknum=123456789")'),
+      '#description' => $this->t(
+        'The base URL for assembling a tracking URL. If the [tracking_code]
+         token is omitted, the code will be appended to the end of the URL
+          (e.g. "https://wwwapps.ups.com/tracking/tracking.cgi?tracknum=123456789")'
+      ),
       '#default_value' => $this->configuration['options']['tracking_url'],
     ];
     $form['options']['log'] = [
@@ -238,14 +274,12 @@ class UPS extends ShippingMethodBase implements SupportsTrackingInterface {
    *   The rates.
    */
   public function calculateRates(ShipmentInterface $shipment) {
-    $rates = [];
-
-    // Only attempt to collect rates if an address exits on the shipment.
-    if (!$shipment->getShippingProfile()->get('address')->isEmpty()) {
-      $rates = $this->ups_rate_service->getRates($shipment, $this);
+    // Only attempt to collect rates if an address exists on the shipment.
+    if ($shipment->getShippingProfile()->get('address')->isEmpty()) {
+      return [];
     }
 
-    return $rates;
+    return $this->upsRateService->getRates($shipment, $this);
   }
 
   /**
