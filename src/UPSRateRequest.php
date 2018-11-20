@@ -8,8 +8,7 @@ use Drupal\commerce_shipping\Entity\ShipmentInterface;
 use Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface;
 use Drupal\commerce_shipping\ShippingRate;
 use Drupal\commerce_shipping\ShippingService;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Ups\Rate;
 use Ups\Entity\RateInformation;
 
@@ -46,25 +45,15 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
    *
    * @param \Drupal\commerce_ups\UPSShipmentInterface $ups_shipment
    *   The UPS shipment object.
-   * @param \Psr\Log\LoggerInterface $logger
-   *   The logger.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *   The logger factory.
    */
   public function __construct(
     UPSShipmentInterface $ups_shipment,
-    LoggerInterface $logger
+    LoggerChannelFactoryInterface $logger_factory
   ) {
     $this->upsShipment = $ups_shipment;
-    $this->logger = $logger;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('commerce_ups.ups_shipment'),
-      $container->get('logger.factory')->get(COMMERCE_UPS_LOGGER_CHANNEL)
-    );
+    $this->logger = $logger_factory->get(COMMERCE_UPS_LOGGER_CHANNEL);
   }
 
   /**

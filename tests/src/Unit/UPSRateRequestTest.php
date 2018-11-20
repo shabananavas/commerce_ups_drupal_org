@@ -2,10 +2,15 @@
 
 namespace Drupal\Tests\commerce_ups\Unit;
 
+use const COMMERCE_UPS_LOGGER_CHANNEL;
 use Drupal\commerce_ups\UPSRateRequest;
 use Drupal\commerce_ups\UPSShipment;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\physical\LengthUnit;
 use Drupal\physical\WeightUnit;
+
+define('COMMERCE_UPS_LOGGER_CHANNEL', 'commerce_ups');
 
 /**
  * Class UPSRateRequestTest.
@@ -28,7 +33,11 @@ class UPSRateRequestTest extends UPSUnitTestBase {
   public function setUp() {
     parent::setUp();
 
-    $this->rateRequest = new UPSRateRequest(new UPSShipment());
+    $logger_factory = $this->prophesize(LoggerChannelFactoryInterface::class);
+    $logger = $this->prophesize(LoggerChannelInterface::class);
+    $logger_factory->get(COMMERCE_UPS_LOGGER_CHANNEL)
+      ->willReturn($logger->reveal());
+    $this->rateRequest = new UPSRateRequest(new UPSShipment(), $logger_factory->reveal());
     $this->rateRequest->setConfig($this->configuration);
   }
 
