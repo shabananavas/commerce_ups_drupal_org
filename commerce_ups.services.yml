@@ -1,8 +1,15 @@
 services:
   commerce_ups.ups_rate_request:
     class: Drupal\commerce_ups\UPSRateRequest
-    arguments: ['@commerce_ups.ups_shipment', '@logger.factory']
+    arguments:
+      - '@commerce_ups.ups_shipment'
+      - '@commerce_ups.ups_transit_request'
+      - '@logger.factory'
 
   commerce_ups.ups_shipment:
     class: Drupal\commerce_ups\UPSShipment
     arguments: []
+
+  commerce_ups.ups_transit_request:
+    class: Drupal\commerce_ups\UPSTransitRequest
+    arguments: ['@logger.factory']

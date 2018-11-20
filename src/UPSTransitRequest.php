@@ -7,6 +7,7 @@ use DateInterval;
 use DateTime;
 use Drupal;
 use Drupal\commerce_shipping\Entity\ShipmentInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\physical\WeightUnit;
 use Ups\Entity\AddressArtifactFormat;
 use Ups\Entity\InvoiceLineTotal;
@@ -21,7 +22,7 @@ use Ups\TimeInTransit;
  *
  * @package Drupal\commerce_ups
  */
-class UPSTransitRequest extends UPSRateRequest {
+class UPSTransitRequest extends UPSRateRequest implements UPSTransitRequestInterface {
 
   /**
    * The configuration array from a CommerceShippingMethod.
@@ -52,7 +53,25 @@ class UPSTransitRequest extends UPSRateRequest {
   protected $request;
 
   /**
+   * The logger.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * UPSTransitRequest constructor().
+   *
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *   The logger factory.
+   */
+  public function __construct(LoggerChannelFactoryInterface $logger_factory) {
+    $this->logger = $logger_factory->get(COMMERCE_UPS_LOGGER_CHANNEL);
+    $this->request = new TimeInTransitRequest();
+  }
+
+  /**
+   * Builds a time in transit object.
    *
    * @param array $configuration
    *   array of authentication information for UPS.
@@ -60,8 +79,11 @@ class UPSTransitRequest extends UPSRateRequest {
    *   Commerce shipment object.
    * @param \Ups\Entity\Shipment $api_shipment
    *   UPS Shipment Object.
+   *
+   * @return \Ups\Entity\TimeInTransitRequest
+   *   A time in transit request response object for a shipment.
    */
-  public function __construct(
+  public function getTransitTime(
     array $configuration,
     ShipmentInterface $shipment,
     Shipment $api_shipment
@@ -69,23 +91,14 @@ class UPSTransitRequest extends UPSRateRequest {
     $this->configuration = $configuration;
     $this->shipment = $shipment;
     $this->upsShipment = $api_shipment;
-    $this->request = new TimeInTransitRequest();
-  }
 
-  /**
-   * Builds a time in transit object.
-   *
-   * @return \Ups\Entity\TimeInTransitRequest
-   *   A time in transit request response object for a shipment.
-   */
-  public function getTransitTime() {
     $time_in_transit = new TimeInTransit(
       $this->configuration['api_information']['access_key'],
       $this->configuration['api_information']['user_id'],
       $this->configuration['api_information']['password'],
       $this->useIntegrationMode(),
       NULL,
-      Drupal::logger(COMMERCE_UPS_LOGGER_CHANNEL)
+      $this->logger
     );
 
     $this->setAddressArtifacts();

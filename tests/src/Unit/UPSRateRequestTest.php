@@ -4,6 +4,7 @@ namespace Drupal\Tests\commerce_ups\Unit {
 
   use Drupal\commerce_ups\UPSRateRequest;
   use Drupal\commerce_ups\UPSShipment;
+  use Drupal\commerce_ups\UPSTransitRequest;
   use Drupal\Core\Language\Language;
   use Drupal\Core\Language\LanguageManagerInterface;
   use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -35,10 +36,25 @@ namespace Drupal\Tests\commerce_ups\Unit {
     public function setUp() {
       parent::setUp();
 
+      // Mock the language manager class and set it in the
+      // Drupal container.
+      $language_manager = $this->prophesize(LanguageManagerInterface::class);
+      $language_manager->getCurrentLanguage()->willReturn(new Language(['id' => 'en']));
+      $language_manager = $language_manager->reveal();
+      $container = new ContainerBuilder();
+      $container->set('language_manager', $language_manager);
+      \Drupal::setContainer($container);
+
+      // Initialize the rate request service object.
       $logger_factory = $this->prophesize(LoggerChannelFactoryInterface::class);
-      $logger = $this->prophesize(LoggerChannelInterface::class);
+      $logger = $this->prophesize(LoggerInterface::class);
       $logger_factory->get(COMMERCE_UPS_LOGGER_CHANNEL)->willReturn($logger->reveal());
-      $this->rateRequest = new UPSRateRequest(new UPSShipment(), $logger_factory->reveal());
+      $logger_factory = $logger_factory->reveal();
+      $this->rateRequest = new UPSRateRequest(
+        new UPSShipment(),
+        new UPSTransitRequest($logger_factory),
+        $logger_factory
+      );
       $this->rateRequest->setConfig($this->configuration);
     }
 
@@ -95,18 +111,6 @@ namespace Drupal\Tests\commerce_ups\Unit {
       // Invoke the rate request object.
       $shipment = $this->mockShipment($weight_unit, $length_unit, $send_from_usa);
       $shipping_method = $this->mockShippingMethod();
-
-      // Mock the language manager class and set it in the Drupal container.
-      $logger = $this->prophesize(LoggerInterface::class);
-      $logger_factory = $this->prophesize(LoggerChannelFactoryInterface::class);
-      $logger_factory->get('commerce_ups')->willReturn($logger->reveal());
-      $language_manager = $this->prophesize(LanguageManagerInterface::class);
-      $language_manager->getCurrentLanguage()->willReturn(new Language(['id' => 'en']));
-      $language_manager = $language_manager->reveal();
-      $container = new ContainerBuilder();
-      $container->set('logger.factory', $logger_factory->reveal());
-      $container->set('language_manager', $language_manager);
-      \Drupal::setContainer($container);
 
       // Now, fetch the rates.
       $rates = $this->rateRequest->getRates($shipment, $shipping_method);

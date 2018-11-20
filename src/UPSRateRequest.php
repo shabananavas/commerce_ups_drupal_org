@@ -35,6 +35,13 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
   protected $upsShipment;
 
   /**
+   * The UPS transit request object.
+   *
+   * @var \Drupal\commerce_ups\UPSTransitRequestInterface
+   */
+  protected $upsTransit;
+
+  /**
    * The logger.
    *
    * @var \Psr\Log\LoggerInterface
@@ -46,14 +53,18 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
    *
    * @param \Drupal\commerce_ups\UPSShipmentInterface $ups_shipment
    *   The UPS shipment object.
+   * @param \Drupal\commerce_ups\UPSTransitRequestInterface $ups_transit_request
+   *   The UPS time transit service object.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
    *   The logger factory.
    */
   public function __construct(
     UPSShipmentInterface $ups_shipment,
+    UPSTransitRequestInterface $ups_transit_request,
     LoggerChannelFactoryInterface $logger_factory
   ) {
     $this->upsShipment = $ups_shipment;
+    $this->upsTransit = $ups_transit_request;
     $this->logger = $logger_factory->get(COMMERCE_UPS_LOGGER_CHANNEL);
   }
 
@@ -106,14 +117,6 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
 
       // Shop Rates.
       $ups_rates = $request->shopRates($shipment);
-
-      // Create a time in transit object so we can get the transit time for this
-      // shipment.
-      $time_in_transit = new UPSTransitRequest(
-        $this->configuration,
-        $commerce_shipment,
-        $shipment
-      );
     }
     catch (\Exception $e) {
       $this->logger->error($e->getMessage());
@@ -151,19 +154,22 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
           $service_name
         );
 
-        if (isset($time_in_transit)) {
-          $times = $time_in_transit->getTransitTime();
-          foreach ($times->ServiceSummary as $serviceSummary) {
-            $rates[] = new ShippingRate(
-              $service_code,
-              $shipping_service,
-              $price,
-              $date::createFromFormat('Y-m-d', $serviceSummary->EstimatedArrival->getDate())
-            );
-          }
+        $times = $this->upsTransit->getTransitTime(
+          $this->configuration,
+          $commerce_shipment,
+          $shipment
+        );
+        foreach ($times->ServiceSummary as $serviceSummary) {
+          $rates[] = new ShippingRate(
+            $service_code,
+            $shipping_service,
+            $price,
+            $date::createFromFormat('Y-m-d', $serviceSummary->EstimatedArrival->getDate())
+          );
         }
       }
     }
+
     return $rates;
   }
 
