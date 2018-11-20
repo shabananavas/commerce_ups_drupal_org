@@ -12,7 +12,7 @@ namespace Drupal\Tests\commerce_ups\Unit {
   use Psr\Log\LoggerInterface;
   use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-  define(COMMERCE_UPS_LOGGER_CHANNEL, 'commerce_ups');
+  define('COMMERCE_UPS_LOGGER_CHANNEL', 'commerce_ups');
 
   /**
    * Class UPSRateRequestTest.
@@ -35,7 +35,10 @@ namespace Drupal\Tests\commerce_ups\Unit {
     public function setUp() {
       parent::setUp();
 
-      $this->rateRequest = new UPSRateRequest(new UPSShipment());
+      $logger_factory = $this->prophesize(LoggerChannelFactoryInterface::class);
+      $logger = $this->prophesize(LoggerChannelInterface::class);
+      $logger_factory->get(COMMERCE_UPS_LOGGER_CHANNEL)->willReturn($logger->reveal());
+      $this->rateRequest = new UPSRateRequest(new UPSShipment(), $logger_factory->reveal());
       $this->rateRequest->setConfig($this->configuration);
     }
 

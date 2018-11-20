@@ -9,7 +9,7 @@ use Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterf
 use Drupal\commerce_shipping\ShippingRate;
 use Drupal\commerce_shipping\ShippingService;
 use Drupal\Core\Datetime\DrupalDateTime;
-use Psr\Container\ContainerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Ups\Rate;
 use Ups\Entity\RateInformation;
 
@@ -35,22 +35,26 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
   protected $upsShipment;
 
   /**
+   * The logger.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * UPSRateRequest constructor.
    *
    * @param \Drupal\commerce_ups\UPSShipmentInterface $ups_shipment
    *   The UPS shipment object.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *   The logger factory.
    */
-  public function __construct(UPSShipmentInterface $ups_shipment) {
+  public function __construct(
+    UPSShipmentInterface $ups_shipment,
+    LoggerChannelFactoryInterface $logger_factory
+  ) {
     $this->upsShipment = $ups_shipment;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('commerce_ups.ups_shipment')
-    );
+    $this->logger = $logger_factory->get(COMMERCE_UPS_LOGGER_CHANNEL);
   }
 
   /**
@@ -73,8 +77,8 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
     try {
       $auth = $this->getAuth();
     }
-    catch (\Exception $exception) {
-      \Drupal::logger(COMMERCE_UPS_LOGGER_CHANNEL)->error(
+    catch (\Exception $e) {
+      $this->logger->error(
         dt(
           'Unable to fetch authentication config for UPS. Please check your shipping method configuration.'
         )
@@ -111,8 +115,8 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
         $shipment
       );
     }
-    catch (\Exception $ex) {
-      \Drupal::logger(COMMERCE_UPS_LOGGER_CHANNEL)->error($ex->getMessage());
+    catch (\Exception $e) {
+      $this->logger->error($e->getMessage());
       $ups_rates = [];
     }
 

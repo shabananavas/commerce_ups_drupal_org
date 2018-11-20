@@ -6,7 +6,7 @@ use Drupal\commerce_shipping\Entity\ShipmentInterface;
 use Drupal\commerce_shipping\PackageTypeManagerInterface;
 use Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodBase;
 use Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\SupportsTrackingInterface;
-use Drupal\commerce_ups\UPSRequestInterface;
+use Drupal\commerce_ups\UPSRateRequestInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -39,12 +39,12 @@ class UPS extends ShippingMethodBase implements SupportsTrackingInterface {
   /**
    * The service for fetching shipping rates from UPS.
    *
-   * @var \Drupal\commerce_ups\UPSRateRequest
+   * @var \Drupal\commerce_ups\UPSRateRequestInterface
    */
   protected $upsRateService;
 
   /**
-   * Constructs a new ShippingMethodBase object.
+   * Constructs a new UPS object.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -54,7 +54,7 @@ class UPS extends ShippingMethodBase implements SupportsTrackingInterface {
    *   The plugin implementation definition.
    * @param \Drupal\commerce_shipping\PackageTypeManagerInterface $packageTypeManager
    *   The package type manager.
-   * @param \Drupal\commerce_ups\UPSRequestInterface $ups_rate_request
+   * @param \Drupal\commerce_ups\UPSRateRequestInterface $ups_rate_request
    *   The rate request service.
    */
   public function __construct(
@@ -62,7 +62,7 @@ class UPS extends ShippingMethodBase implements SupportsTrackingInterface {
     $plugin_id,
     $plugin_definition,
     PackageTypeManagerInterface $packageTypeManager,
-    UPSRequestInterface $ups_rate_request
+    UPSRateRequestInterface $ups_rate_request
   ) {
     // Rewrite the service keys to be integers.
     $plugin_definition = $this->preparePluginDefinition($plugin_definition);
@@ -315,13 +315,13 @@ class UPS extends ShippingMethodBase implements SupportsTrackingInterface {
    *   TRUE if there is enough information to connect, FALSE otherwise.
    */
   protected function isConfigured() {
-    $api_information = $this->configuration['api_information'];
+    $api_config = &$this->configuration['api_information'];
 
-    return (
-      !empty($api_information['access_key'])
-      && !empty($api_information['user_id'])
-      && !empty($api_information['password'])
-    );
+    if (empty($api_config['access_key']) || empty($api_config['user_id']) || empty($api_config['password'])) {
+      return FALSE;
+    }
+
+    return TRUE;
   }
 
 }
