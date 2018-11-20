@@ -9,6 +9,7 @@ use Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterf
 use Drupal\commerce_shipping\ShippingRate;
 use Drupal\commerce_shipping\ShippingService;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use Ups\Rate;
 use Ups\Entity\RateInformation;
 
@@ -34,13 +35,26 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
   protected $upsShipment;
 
   /**
+   * The logger.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * UPSRateRequest constructor.
    *
    * @param \Drupal\commerce_ups\UPSShipmentInterface $ups_shipment
    *   The UPS shipment object.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger.
    */
-  public function __construct(UPSShipmentInterface $ups_shipment) {
+  public function __construct(
+    UPSShipmentInterface $ups_shipment,
+    LoggerInterface $logger
+  ) {
     $this->upsShipment = $ups_shipment;
+    $this->logger = $logger;
   }
 
   /**
@@ -48,7 +62,8 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('commerce_ups.ups_shipment')
+      $container->get('commerce_ups.ups_shipment'),
+      $container->get('logger.factory')->get(COMMERCE_UPS_LOGGER_CHANNEL)
     );
   }
 
@@ -72,8 +87,8 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
     try {
       $auth = $this->getAuth();
     }
-    catch (\Exception $exception) {
-      \Drupal::logger(COMMERCE_UPS_LOGGER_CHANNEL)->error(
+    catch (\Exception $e) {
+      $this->logger->error(
         dt(
           'Unable to fetch authentication config for UPS. Please check your shipping method configuration.'
         )
@@ -102,8 +117,8 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
       // Shop Rates.
       $ups_rates = $request->shopRates($shipment);
     }
-    catch (\Exception $ex) {
-      \Drupal::logger(COMMERCE_UPS_LOGGER_CHANNEL)->error($ex->getMessage());
+    catch (\Exception $e) {
+      $this->logger->error($e->getMessage());
       $ups_rates = [];
     }
 
