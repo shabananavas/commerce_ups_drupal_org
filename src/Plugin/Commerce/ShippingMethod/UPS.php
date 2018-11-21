@@ -31,6 +31,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *    "_59" = @translation("UPS Second Day Air AM"),
  *    "_65" = @translation("UPS Saver"),
  *    "_70" = @translation("UPS Access Point Economy"),
+ *    "_93" = @translation("UPS Sure Post"),
  *  }
  * )
  */
