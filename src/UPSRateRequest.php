@@ -110,7 +110,20 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
       }
 
       // Shop Rates.
-      $ups_rates = $request->shopRates($shipment);
+      $ship_to = $shipment->getShipTo();
+      $ship_to_address = $ship_to->getAddress();
+      $ship_to_state = $ship_to_address->getStateProvinceCode();
+
+      // Set info for Surepost.
+      if (in_array($ship_to_state, ['AA', 'AP', 'AE'])) {
+        $shipping_service = $shipment->getService();
+        $shipping_service->setCode('93');
+
+        $ups_rates = $request->getRate($shipment);
+      }
+      else {
+        $ups_rates = $request->shopRates($shipment);
+      }
     }
     catch (\Exception $e) {
       $this->logger->error($e->getMessage());
