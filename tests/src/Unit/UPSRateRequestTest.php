@@ -1,137 +1,176 @@
 <?php
 
-namespace Drupal\Tests\commerce_ups\Unit;
+namespace Drupal\Tests\commerce_ups\Unit {
 
-use const COMMERCE_UPS_LOGGER_CHANNEL;
-use Drupal\commerce_ups\UPSRateRequest;
-use Drupal\commerce_ups\UPSShipment;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Logger\LoggerChannelInterface;
-use Drupal\physical\LengthUnit;
-use Drupal\physical\WeightUnit;
+  use Drupal\commerce_ups\UPSRateRequest;
+  use Drupal\commerce_ups\UPSShipment;
+  use Drupal\commerce_ups\UPSTransitRequest;
+  use Drupal\Core\Language\Language;
+  use Drupal\Core\Language\LanguageManagerInterface;
+  use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+  use Drupal\physical\LengthUnit;
+  use Drupal\physical\WeightUnit;
+  use Psr\Log\LoggerInterface;
+  use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-define('COMMERCE_UPS_LOGGER_CHANNEL', 'commerce_ups');
-
-/**
- * Class UPSRateRequestTest.
- *
- * @coversDefaultClass \Drupal\commerce_ups\UPSRateRequest
- * @group commerce_ups
- */
-class UPSRateRequestTest extends UPSUnitTestBase {
+  define('COMMERCE_UPS_LOGGER_CHANNEL', 'commerce_ups');
 
   /**
-   * A UPS rate request object.
+   * Class UPSRateRequestTest.
    *
-   * @var \Drupal\commerce_ups\UPSRateRequest
+   * @coversDefaultClass \Drupal\commerce_ups\UPSRateRequest
+   * @group commerce_ups
    */
-  protected $rateRequest;
+  class UPSRateRequestTest extends UPSUnitTestBase {
 
-  /**
-   * Set up requirements for test.
-   */
-  public function setUp() {
-    parent::setUp();
+    /**
+     * A UPS rate request object.
+     *
+     * @var \Drupal\commerce_ups\UPSRateRequest
+     */
+    protected $rateRequest;
 
-    $logger_factory = $this->prophesize(LoggerChannelFactoryInterface::class);
-    $logger = $this->prophesize(LoggerChannelInterface::class);
-    $logger_factory->get(COMMERCE_UPS_LOGGER_CHANNEL)
-      ->willReturn($logger->reveal());
-    $this->rateRequest = new UPSRateRequest(new UPSShipment(), $logger_factory->reveal());
-    $this->rateRequest->setConfig($this->configuration);
-  }
+    /**
+     * Set up requirements for test.
+     */
+    public function setUp() {
+      parent::setUp();
 
-  /**
-   * Test getAuth response.
-   *
-   * @covers ::getAuth
-   */
-  public function testAuth() {
-    $auth = $this->rateRequest->getAuth();
+      // Mock the language manager class and set it in the
+      // Drupal container.
+      $language_manager = $this->prophesize(LanguageManagerInterface::class);
+      $language_manager->getCurrentLanguage()->willReturn(new Language(['id' => 'en']));
+      $language_manager = $language_manager->reveal();
+      $container = new ContainerBuilder();
+      $container->set('language_manager', $language_manager);
+      \Drupal::setContainer($container);
 
-    $this->assertEquals($auth['access_key'], $this->configuration['api_information']['access_key']);
-    $this->assertEquals($auth['user_id'], $this->configuration['api_information']['user_id']);
-    $this->assertEquals($auth['password'], $this->configuration['api_information']['password']);
-  }
-
-  /**
-   * Test useIntegrationMode().
-   *
-   * @covers ::useIntegrationMode
-   */
-  public function testIntegrationMode() {
-    $mode = $this->rateRequest->useIntegrationMode();
-
-    $this->assertEquals(TRUE, $mode);
-  }
-
-  /**
-   * Test getRateType().
-   *
-   * @covers ::getRateType
-   */
-  public function testRateType() {
-    $type = $this->rateRequest->getRateType();
-
-    $this->assertEquals(TRUE, $type);
-  }
-
-  /**
-   * Test rate requests return valid rates.
-   *
-   * @param string $weight_unit
-   *   Weight unit.
-   * @param string $length_unit
-   *   Length unit.
-   * @param bool $send_from_usa
-   *   Whether the shipment should be sent from USA.
-   *
-   * @covers ::getRates
-   *
-   * @dataProvider measurementUnitsDataProvider
-   */
-  public function testRateRequest($weight_unit, $length_unit, $send_from_usa) {
-    // Invoke the rate request object.
-    $shipment = $this->mockShipment($weight_unit, $length_unit, $send_from_usa);
-    $shipping_method = $this->mockShippingMethod();
-    $rates = $this->rateRequest->getRates($shipment, $shipping_method);
-
-    // Make sure at least one rate was returned.
-    $this->assertArrayHasKey(0, $rates);
-
-    foreach ($rates as $rate) {
-      /* @var \Drupal\commerce_shipping\ShippingRate $rate */
-      $this->assertInstanceOf('Drupal\commerce_shipping\ShippingRate', $rate);
-      $this->assertInstanceOf('Drupal\commerce_price\Price', $rate->getAmount());
-      $this->assertGreaterThan(0, $rate->getAmount()->getNumber());
-      $this->assertEquals($rate->getAmount()->getCurrencyCode(), $send_from_usa ? 'USD' : 'EUR');
-      $this->assertNotEmpty($rate->getService()->getLabel());
+      // Initialize the rate request service object.
+      $logger_factory = $this->prophesize(LoggerChannelFactoryInterface::class);
+      $logger = $this->prophesize(LoggerInterface::class);
+      $logger_factory->get(COMMERCE_UPS_LOGGER_CHANNEL)->willReturn($logger->reveal());
+      $logger_factory = $logger_factory->reveal();
+      $this->rateRequest = new UPSRateRequest(
+        new UPSShipment(),
+        new UPSTransitRequest($logger_factory),
+        $logger_factory
+      );
+      $this->rateRequest->setConfig($this->configuration);
     }
-  }
 
-  /**
-   * Data provider for testRateRequest()
-   */
-  public function measurementUnitsDataProvider() {
-    $weight_units = [
-      WeightUnit::GRAM,
-      WeightUnit::KILOGRAM,
-      WeightUnit::OUNCE,
-      WeightUnit::POUND,
-    ];
-    $length_units = [
-      LengthUnit::MILLIMETER,
-      LengthUnit::CENTIMETER,
-      LengthUnit::METER,
-      LengthUnit::INCH,
-      LengthUnit::FOOT,
-    ];
-    foreach ($weight_units as $weight_unit) {
-      foreach ($length_units as $length_unit) {
-        yield [$weight_unit, $length_unit, TRUE];
-        yield [$weight_unit, $length_unit, FALSE];
+    /**
+     * Test getAuth response.
+     *
+     * @covers ::getAuth
+     */
+    public function testAuth() {
+      $auth = $this->rateRequest->getAuth();
+
+      $this->assertEquals($auth['access_key'], $this->configuration['api_information']['access_key']);
+      $this->assertEquals($auth['user_id'], $this->configuration['api_information']['user_id']);
+      $this->assertEquals($auth['password'], $this->configuration['api_information']['password']);
+    }
+
+    /**
+     * Test useIntegrationMode().
+     *
+     * @covers ::useIntegrationMode
+     */
+    public function testIntegrationMode() {
+      $mode = $this->rateRequest->useIntegrationMode();
+
+      $this->assertEquals(TRUE, $mode);
+    }
+
+    /**
+     * Test getRateType().
+     *
+     * @covers ::getRateType
+     */
+    public function testRateType() {
+      $type = $this->rateRequest->getRateType();
+
+      $this->assertEquals(TRUE, $type);
+    }
+
+    /**
+     * Test rate requests return valid rates.
+     *
+     * @param string $weight_unit
+     *   Weight unit.
+     * @param string $length_unit
+     *   Length unit.
+     * @param bool $send_from_usa
+     *   Whether the shipment should be sent from USA.
+     *
+     * @covers ::getRates
+     *
+     * @dataProvider measurementUnitsDataProvider
+     */
+    public function testRateRequest($weight_unit, $length_unit, $send_from_usa) {
+      // Invoke the rate request object.
+      $shipment = $this->mockShipment($weight_unit, $length_unit, $send_from_usa);
+      $shipping_method = $this->mockShippingMethod();
+
+      // Now, fetch the rates.
+      $rates = $this->rateRequest->getRates($shipment, $shipping_method);
+
+      // Make sure at least one rate was returned.
+      $this->assertArrayHasKey(0, $rates);
+
+      foreach ($rates as $rate) {
+        /* @var \Drupal\commerce_shipping\ShippingRate $rate */
+        $this->assertInstanceOf('Drupal\commerce_shipping\ShippingRate', $rate);
+        $this->assertInstanceOf('Drupal\commerce_price\Price', $rate->getAmount());
+        $this->assertGreaterThan(0, $rate->getAmount()->getNumber());
+        $this->assertEquals($rate->getAmount()->getCurrencyCode(), $send_from_usa ? 'USD' : 'EUR');
+        $this->assertNotEmpty($rate->getService()->getLabel());
       }
     }
+
+    /**
+     * Data provider for testRateRequest()
+     */
+    public function measurementUnitsDataProvider() {
+      $weight_units = [
+        WeightUnit::GRAM,
+        WeightUnit::KILOGRAM,
+        WeightUnit::OUNCE,
+        WeightUnit::POUND,
+      ];
+      $length_units = [
+        LengthUnit::MILLIMETER,
+        LengthUnit::CENTIMETER,
+        LengthUnit::METER,
+        LengthUnit::INCH,
+        LengthUnit::FOOT,
+      ];
+      foreach ($weight_units as $weight_unit) {
+        foreach ($length_units as $length_unit) {
+          yield [$weight_unit, $length_unit, TRUE];
+          yield [$weight_unit, $length_unit, FALSE];
+        }
+      }
+    }
+
+  }
+
+}
+
+namespace Drupal\Core\Datetime {
+
+  if (!function_exists('drupal_get_user_timezone')) {
+
+    /**
+     * Fix for drupal_get_user_timezone() function not found error.
+     *
+     * @return string
+     *   The timezone.
+     */
+    function drupal_get_user_timezone() {
+      return date_default_timezone_get();
+    }
+
   }
 
 }
