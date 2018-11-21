@@ -12,7 +12,7 @@ use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Creates a UPS shipping method.
+ * Provides the UPS shipping method.
  *
  * @CommerceShippingMethod(
  *  id = "ups",
@@ -52,7 +52,7 @@ class UPS extends ShippingMethodBase implements SupportsTrackingInterface {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\commerce_shipping\PackageTypeManagerInterface $packageTypeManager
+   * @param \Drupal\commerce_shipping\PackageTypeManagerInterface $package_type_manager
    *   The package type manager.
    * @param \Drupal\commerce_ups\UPSRateRequestInterface $ups_rate_request
    *   The rate request service.
@@ -61,7 +61,7 @@ class UPS extends ShippingMethodBase implements SupportsTrackingInterface {
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    PackageTypeManagerInterface $packageTypeManager,
+    PackageTypeManagerInterface $package_type_manager,
     UPSRateRequestInterface $ups_rate_request
   ) {
     // Rewrite the service keys to be integers.
@@ -71,7 +71,7 @@ class UPS extends ShippingMethodBase implements SupportsTrackingInterface {
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $packageTypeManager
+      $package_type_manager
     );
 
     $this->upsRateService = $ups_rate_request;
