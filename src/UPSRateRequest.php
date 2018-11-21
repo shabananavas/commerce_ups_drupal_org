@@ -10,6 +10,8 @@ use Drupal\commerce_shipping\ShippingRate;
 use Drupal\commerce_shipping\ShippingService;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Ups\Entity\RatedShipment;
+use Ups\Entity\Shipment;
 use Ups\Rate;
 use Ups\Entity\RateInformation;
 
@@ -19,13 +21,6 @@ use Ups\Entity\RateInformation;
  * @package Drupal\commerce_ups
  */
 class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
-
-  /**
-   * A shipping method configuration array.
-   *
-   * @var array
-   */
-  protected $configuration;
 
   /**
    * The UPS Shipment object.
@@ -94,7 +89,8 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
           'Unable to fetch authentication config for UPS. Please check your shipping method configuration.'
         )
       );
-      return [];
+
+      return $rates;
     }
 
     $request = new Rate(
@@ -123,51 +119,19 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
       $ups_rates = [];
     }
 
-    if (!empty($ups_rates->RatedShipment)) {
-      foreach ($ups_rates->RatedShipment as $ups_rate) {
-        $service_code = $ups_rate->Service->getCode();
+    if (empty($ups_rates->RatedShipment)) {
+      return $rates;
+    }
 
-        // Only add the rate if this service is enabled.
-        if (!in_array($service_code, $this->configuration['services'])) {
-          continue;
-        }
+    foreach ($ups_rates->RatedShipment as $ups_rate) {
+      $service_code = $ups_rate->Service->getCode();
 
-        // Use negotiated rates if they were returned.
-        if ($this->getRateType() && !empty($ups_rate->NegotiatedRates->NetSummaryCharges->GrandTotal->MonetaryValue)) {
-          $cost = $ups_rate->NegotiatedRates->NetSummaryCharges->GrandTotal->MonetaryValue;
-          $currency = $ups_rate->NegotiatedRates->NetSummaryCharges->GrandTotal->CurrencyCode;
-        }
-
-        // Otherwise, use the default rates.
-        else {
-          $cost = $ups_rate->TotalCharges->MonetaryValue;
-          $currency = $ups_rate->TotalCharges->CurrencyCode;
-        }
-
-        $price = new Price((string) $cost, $currency);
-        $service_name = $ups_rate->Service->getName();
-        $date = new DrupalDateTime();
-        $date->format('Y-m-d');
-
-        $shipping_service = new ShippingService(
-          $service_code,
-          $service_name
-        );
-
-        $times = $this->upsTransit->getTransitTime(
-          $this->configuration,
-          $commerce_shipment,
-          $shipment
-        );
-        foreach ($times->ServiceSummary as $serviceSummary) {
-          $rates[] = new ShippingRate(
-            $service_code,
-            $shipping_service,
-            $price,
-            $date::createFromFormat('Y-m-d', $serviceSummary->EstimatedArrival->getDate())
-          );
-        }
+      // Only add the rate if this service is enabled.
+      if (!in_array($service_code, $this->configuration['services'])) {
+        continue;
       }
+
+      $rates[] = $this->getShippingRates($commerce_shipment, $shipment, $ups_rate);
     }
 
     return $rates;
@@ -181,6 +145,63 @@ class UPSRateRequest extends UPSRequest implements UPSRateRequestInterface {
    */
   public function getRateType() {
     return boolval($this->configuration['rate_options']['rate_type']);
+  }
+
+  /**
+   * Create and return a commerce shipping rate based on the UPS rate.
+   *
+   * @param \Drupal\commerce_shipping\Entity\ShipmentInterface $commerce_shipment
+   *   The commerce shipment.
+   * @param \Ups\Entity\Shipment $shipment
+   *   The UPS shipment entity.
+   * @param \Ups\Entity\RatedShipment $ups_rate
+   *   The rate response from UPS.
+   *
+   * @return \Drupal\commerce_shipping\ShippingRate
+   *   A commerce shipping rate object.
+   */
+  protected function getShippingRates(
+    ShipmentInterface $commerce_shipment,
+    Shipment $shipment,
+    RatedShipment $ups_rate
+  ) {
+    $service_code = $ups_rate->Service->getCode();
+
+    // Use negotiated rates if they were returned.
+    if ($this->getRateType() && !empty($ups_rate->NegotiatedRates->NetSummaryCharges->GrandTotal->MonetaryValue)) {
+      $cost = $ups_rate->NegotiatedRates->NetSummaryCharges->GrandTotal->MonetaryValue;
+      $currency = $ups_rate->NegotiatedRates->NetSummaryCharges->GrandTotal->CurrencyCode;
+    }
+    // Otherwise, use the default rates.
+    else {
+      $cost = $ups_rate->TotalCharges->MonetaryValue;
+      $currency = $ups_rate->TotalCharges->CurrencyCode;
+    }
+
+    $price = new Price((string) $cost, $currency);
+    $service_name = $ups_rate->Service->getName();
+    $date = new DrupalDateTime();
+    $date->format('Y-m-d');
+
+    $shipping_service = new ShippingService(
+      $service_code,
+      $service_name
+    );
+
+    $times = $this->upsTransit->getTransitTime(
+      $this->configuration,
+      $commerce_shipment,
+      $shipment
+    );
+
+    foreach ($times->ServiceSummary as $serviceSummary) {
+      return new ShippingRate(
+        $service_code,
+        $shipping_service,
+        $price,
+        $date::createFromFormat('Y-m-d', $serviceSummary->EstimatedArrival->getDate())
+      );
+    }
   }
 
 }

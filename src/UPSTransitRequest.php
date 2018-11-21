@@ -5,16 +5,13 @@ namespace Drupal\commerce_ups;
 use const COMMERCE_UPS_LOGGER_CHANNEL;
 use DateInterval;
 use DateTime;
-use Drupal;
 use Drupal\commerce_shipping\Entity\ShipmentInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\physical\WeightUnit;
 use Ups\Entity\AddressArtifactFormat;
 use Ups\Entity\InvoiceLineTotal;
 use Ups\Entity\Shipment;
 use Ups\Entity\ShipmentWeight;
 use Ups\Entity\TimeInTransitRequest;
-use Ups\Entity\UnitOfMeasurement;
 use Ups\TimeInTransit;
 
 /**
@@ -22,14 +19,7 @@ use Ups\TimeInTransit;
  *
  * @package Drupal\commerce_ups
  */
-class UPSTransitRequest extends UPSRateRequest implements UPSTransitRequestInterface {
-
-  /**
-   * The configuration array from a CommerceShippingMethod.
-   *
-   * @var array
-   */
-  protected $configuration;
+class UPSTransitRequest extends UPSRequest implements UPSTransitRequestInterface {
 
   /**
    * The commerce shipment entity.
