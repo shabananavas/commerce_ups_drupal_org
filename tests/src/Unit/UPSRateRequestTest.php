@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\commerce_ups\Unit;
 
-use const COMMERCE_UPS_LOGGER_CHANNEL;
 use Drupal\commerce_ups\UPSRateRequest;
 use Drupal\commerce_ups\UPSShipment;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;

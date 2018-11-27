@@ -2,7 +2,6 @@
 
 namespace Drupal\commerce_ups;
 
-use const COMMERCE_UPS_LOGGER_CHANNEL;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_shipping\Entity\ShipmentInterface;
 use Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface;
