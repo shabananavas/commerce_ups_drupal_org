@@ -5,6 +5,11 @@ namespace Drupal\commerce_ups;
 use Drupal\commerce_shipping\Entity\ShipmentInterface;
 use Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface;
 
+/**
+ * The interface for fetching and returning rates using the UPS API.
+ *
+ * @package Drupal\commerce_ups
+ */
 interface UPSRateRequestInterface {
 
   /**
