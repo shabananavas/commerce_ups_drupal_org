@@ -6,11 +6,9 @@ work done by [Commerce Fedex](https://github.com/bmcclure/drupal-commerce_fedex)
 
 ## Development Setup
 
-1. Clone this repository in to Drupal modules folder.
+1. Use [Composer](https://getcomposer.org/) to get Commerce UPS with all dependencies.
 
-2. Manually get dependencies to installed Drupal.
-
-`composer require gabrielbull/ups-api:~0.7`
+`composer require drupal/commerce_ups`
 
 3. Enable module.
 
