@@ -6,13 +6,11 @@ work done by [Commerce Fedex](https://github.com/bmcclure/drupal-commerce_fedex)
 
 ## Development Setup
 
-1. Use [Composer](https://getcomposer.org/) to get Commerce UPS with all dependencies.
+1. Use [Composer](https://getcomposer.org/) to get Commerce UPS with all dependencies: `composer require drupal/commerce_ups`
 
-`composer require drupal/commerce_ups`
+2. Enable module.
 
-3. Enable module.
-
-4. Go to /admin/commerce/config/shipping-methods/add:
+3. Go to /admin/commerce/config/shipping-methods/add:
   - Select 'UPS' as the Plugin
   - Enter the UPS API details
   - Select a default package type
