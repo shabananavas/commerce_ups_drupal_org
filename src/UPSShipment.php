@@ -6,6 +6,7 @@ use Drupal\commerce_shipping\Entity\ShipmentInterface;
 use Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface;
 use Drupal\physical\LengthUnit;
 use Drupal\physical\WeightUnit;
+use Ups\Entity\InsuredValue;
 use Ups\Entity\Package as UPSPackage;
 use Ups\Entity\Address;
 use Ups\Entity\PackageWeight;
@@ -119,6 +120,7 @@ class UPSShipment extends UPSEntity implements UPSShipmentInterface {
     $this->setDimensions($package);
     $this->setWeight($package);
     $this->setPackagingType($package);
+    $this->setInsuredValue($package);
 
     $api_shipment->addPackage($package);
   }
@@ -127,7 +129,7 @@ class UPSShipment extends UPSEntity implements UPSShipmentInterface {
    * Package dimension setter.
    *
    * @param \Ups\Entity\Package $ups_package
-   *   A Ups API package object.
+   *   A UPS API package entity.
    */
   public function setDimensions(UPSPackage $ups_package) {
     $dimensions = new Dimensions();
@@ -165,7 +167,7 @@ class UPSShipment extends UPSEntity implements UPSShipmentInterface {
    * Define the package weight.
    *
    * @param \Ups\Entity\Package $ups_package
-   *   A package object from the Ups API.
+   *   A UPS API package entity.
    */
   public function setWeight(UPSPackage $ups_package) {
     $weight = $this->shipment->getWeight()->convert($this->getValidWeightUnit());
@@ -185,7 +187,7 @@ class UPSShipment extends UPSEntity implements UPSShipmentInterface {
    * Sets the package type for a UPS package.
    *
    * @param \Ups\Entity\Package $ups_package
-   *   A Ups API package entity.
+   *   A UPS API package entity.
    */
   public function setPackagingType(UPSPackage $ups_package) {
     $remote_id = $this->getPackageType()->getRemoteId();
@@ -193,6 +195,21 @@ class UPSShipment extends UPSEntity implements UPSShipmentInterface {
     $attributes->Code = !empty($remote_id) && $remote_id != 'custom' ? $remote_id : PackagingType::PT_UNKNOWN;
 
     $ups_package->setPackagingType(new PackagingType($attributes));
+  }
+
+  /**
+   * Set the declared value for a UPS package.
+   *
+   * @param \Ups\Entity\Package $ups_package
+   *   A UPS API package entity.
+   */
+  protected function setInsuredValue(UPSPackage $ups_package) {
+    $shipment_value = $this->shipment->getTotalDeclaredValue();
+
+    $insured_value = new InsuredValue();
+    $insured_value->setMonetaryValue($shipment_value->getNumber());
+    $insured_value->setCurrencyCode($shipment_value->getCurrencyCode());
+    $ups_package->getPackageServiceOptions()->setInsuredValue($insured_value);
   }
 
   /**
