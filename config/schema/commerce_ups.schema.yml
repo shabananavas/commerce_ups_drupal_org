@@ -14,6 +14,9 @@ commerce_shipping.commerce_shipping_method.plugin.ups:
         password:
           type: string
           label: 'Password'
+        account_number:
+          type: string
+          label: 'Account Number'
         mode:
           type: boolean
           label: 'Choose whether to use test or live mode'

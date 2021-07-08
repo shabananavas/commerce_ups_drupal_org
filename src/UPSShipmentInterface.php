@@ -19,10 +19,16 @@ interface UPSShipmentInterface {
    *   The shipment.
    * @param \Drupal\commerce_shipping\Plugin\Commerce\ShippingMethod\ShippingMethodInterface $shipping_method
    *   The shipping method.
+   * @param bool|string $account_number
+   *   The Account/Shipper Number or FALSE.
    *
    * @return \Ups\Entity\Shipment
    *   A Ups API shipment object.
    */
-  public function getShipment(ShipmentInterface $shipment, ShippingMethodInterface $shipping_method);
+  public function getShipment(
+    ShipmentInterface $shipment,
+    ShippingMethodInterface $shipping_method,
+    $account_number
+  );
 
 }
